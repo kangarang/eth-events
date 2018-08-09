@@ -44,7 +44,7 @@ ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues).then(logs
     console.log(log)
     // {
     //   logData: {
-    //     _value: '5000000000',
+    //     _value: <BN: 16bcc41e90>,
     //     _from: '0xDEADBEEFCAFE12345678912456789',
     //     _to: '0xCAFEDEADBEEF12345678912456789',
     //     _eventName: 'Transfer',
