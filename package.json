@@ -1,6 +1,6 @@
 {
   "name": "eth-events",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Library for Ethereum events",
   "repository": "https://github.com/kangarang/eth-events",
   "main": "index.js",
