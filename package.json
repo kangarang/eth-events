@@ -2,6 +2,7 @@
   "name": "eth-events",
   "version": "0.1.0",
   "description": "Library for Ethereum events",
+  "repository": "https://github.com/kangarang/eth-events",
   "main": "index.js",
   "scripts": {
     "test": "tape test/**/*.js"
