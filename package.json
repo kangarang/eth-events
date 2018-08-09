@@ -1,0 +1,21 @@
+{
+  "name": "eth-events",
+  "version": "0.1.0",
+  "description": "Library for Ethereum events",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/**/*.js"
+  },
+  "author": "kangarang",
+  "license": "MIT",
+  "dependencies": {
+    "ethers": "^3.0.26",
+    "ethjs-abi": "^0.2.1",
+    "lodash": "^4.17.10"
+  },
+  "devDependencies": {
+    "ethjs": "^0.4.0",
+    "prettier": "^1.14.2",
+    "tape": "^4.9.1"
+  }
+}
