@@ -82,7 +82,7 @@ class EthEvents {
     const evSigTopics = eventNames.map(eventName => {
       // prettier-ignore
       const eventAbi = find({ 'name': eventName }, abi)
-      const eventString = this.getEventStringFromAbiName(eventAbi, eventName)
+      const eventString = this.getEventStringFromAbiName(eventAbi)
       const eventSignature = utils.id(eventString)
       const eventSignatureTopic = utils.hexlify(eventSignature)
       return eventSignatureTopic
@@ -99,7 +99,7 @@ class EthEvents {
     return { address, topics }
   }
 
-  getEventStringFromAbiName(eventAbi, eventName) {
+  getEventStringFromAbiName(eventAbi) {
     const types = map('type', eventAbi.inputs)
     const signature = `${eventAbi.name}(${types.join(',')})`
     return signature
