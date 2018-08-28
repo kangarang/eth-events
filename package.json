@@ -1,7 +1,7 @@
 {
   "name": "eth-events",
   "version": "0.2.0",
-  "description": "Library for Ethereum events",
+  "description": "A library for querying and decoding Ethereum event logs",
   "repository": "https://github.com/kangarang/eth-events",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,7 @@
     "lodash": "4.17.10"
   },
   "devDependencies": {
-    "ethjs": "^0.4.0",
+    "ethjs": "0.4.0",
     "prettier": "1.14.2",
     "tape": "4.9.1"
   }
