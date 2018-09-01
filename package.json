@@ -3,15 +3,19 @@
   "version": "0.2.0",
   "description": "A library for querying and decoding Ethereum event logs",
   "repository": "https://github.com/kangarang/eth-events",
-  "main": "index.js",
+  "main": "lib/index.js",
   "scripts": {
-    "test": "tape test/**/*.js"
+    "test": "tape test/**/*.js",
+    "build": "babel src/index.js > index.js"
   },
   "author": "kangarang",
   "license": "MIT",
   "dependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
     "ethers": "3.0.26",
     "ethjs-abi": "0.2.1",
+    "hyperapp": "^1.2.8",
     "lodash": "4.17.10"
   },
   "devDependencies": {

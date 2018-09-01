@@ -1,6 +1,6 @@
 const Ethjs = require('ethjs')
 const test = require('tape')
-const EthEvents = require('../')
+const EthEvents = require('../lib/index.js')
 const Token = require('./EIP20.json')
 
 const contract = {
