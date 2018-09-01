@@ -13,14 +13,13 @@
   "author": "kangarang",
   "license": "MIT",
   "dependencies": {
+    "babel-plugin-transform-react-jsx": "6.24.1",
+    "babel-preset-env": "1.7.0",
     "ethers": "3.0.26",
     "ethjs-abi": "0.2.1",
     "lodash": "4.17.10"
   },
   "devDependencies": {
-    "babel-cli": "6.26.0",
-    "babel-plugin-transform-react-jsx": "6.24.1",
-    "babel-preset-env": "1.7.0",
     "ethjs": "0.4.0",
     "hyperapp": "1.2.8",
     "parcel-bundler": "1.9.7",

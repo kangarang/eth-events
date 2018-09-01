@@ -1,5 +1,7 @@
 import { h, app } from 'hyperapp'
 
+import './styles.css'
+
 const state = {
   count: 0,
 }
@@ -12,6 +14,7 @@ const actions = {
 const view = (state, actions) => (
   <div>
     eth-events
+    {console.log('hello?')}
     <h1>{state.count}</h1>
     <button onclick={() => actions.down(1)}>-</button>
     <button onclick={() => actions.up(1)}>+</button>
