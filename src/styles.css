@@ -1,34 +1,33 @@
 body {
-  align-items: center;
-  background-color: #111;
   display: flex;
-  font-family: Helvetica Neue, sans-serif;
   height: 100vh;
-  justify-content: center;
-  margin: 0;
-  padding: 0;
-  line-height: 1;
-  text-align: center;
+  background-color: #111;
+  font-family: Helvetica Neue, sans-serif;
   color: #00caff;
 }
 h1 {
-  color: inherit;
-  font-weight: 100;
-  font-size: 8em;
   margin: 0;
   padding-bottom: 15px;
+  color: inherit;
+  font-weight: 100;
+  font-size: 4em;
+}
+div {
+  margin: 1em;
+}
+.container {
+  border: 1px solid white;
+  margin: 1em 0;
 }
 button {
-  background: #111;
-  border-radius: 0px;
-  border: 1px solid #00caff;
-  color: inherit;
-  font-size: 2em;
-  font-weight: 100;
-  line-height: inherit;
   margin: 0;
   outline: none;
   padding: 5px 15px 10px;
+  background: #111;
+  border: 1px solid #00caff;
+  color: inherit;
+  font-size: 1em;
+  font-weight: 100;
   transition: background 0.2s;
 }
 button:hover,

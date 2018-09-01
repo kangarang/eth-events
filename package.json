@@ -5,22 +5,27 @@
   "repository": "https://github.com/kangarang/eth-events",
   "main": "lib/index.js",
   "scripts": {
-    "build": "parcel build src/index.html --out-dir docs --public-url ./",
-    "dev": "yarn run build && yarn run start",
-    "start": "parcel src/index.html --out-dir docs",
+    "build": "parcel build src/index.html --public-url ./",
+    "clear": "rm -rf dist .cache",
+    "deploy": "yarn run clear && yarn run build && gh-pages -d dist",
+    "dev": "yarn run build && yarn start",
+    "start": "parcel src/index.html",
     "test": "tape test/**/*.js"
   },
   "author": "kangarang",
   "license": "MIT",
   "dependencies": {
-    "babel-plugin-transform-react-jsx": "6.24.1",
-    "babel-preset-env": "1.7.0",
     "ethers": "3.0.26",
     "ethjs-abi": "0.2.1",
     "lodash": "4.17.10"
   },
   "devDependencies": {
+    "babel-plugin-transform-object-rest-spread": "6.26.0",
+    "babel-plugin-transform-react-jsx": "6.24.1",
+    "babel-polyfill": "6.26.0",
+    "babel-preset-env": "1.7.0",
     "ethjs": "0.4.0",
+    "gh-pages": "1.2.0",
     "hyperapp": "1.2.8",
     "parcel-bundler": "1.9.7",
     "prettier": "1.14.2",
