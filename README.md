@@ -59,6 +59,11 @@ ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues).then(logs
     // }
   })
 })
+
+// batch every 75,000 blocks
+ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues, true).then(logs => {
+  // ...
+})
 ```
 
 ## Test
