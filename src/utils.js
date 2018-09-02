@@ -3,19 +3,15 @@ const Token = require('./abis/EIP20.json')
 const Registry = require('./abis/Registry.json')
 const PLCRVoting = require('./abis/PLCRVoting.json')
 
-const stripRightZeros = str => {
-  const strippedStr = str.replace(/0+$/, '')
-  return strippedStr === '' ? null : strippedStr
-}
 const baseToConvertedUnit = (value, decimal) => {
   if (decimal === 0) {
     return value
   }
-  const paddedValue = value.padStart(decimal + 1, '0')
   const integerPart = value.slice(0, -decimal)
-  const fractionPart = stripRightZeros(paddedValue.slice(-decimal))
-  return fractionPart ? `${integerPart}.${fractionPart}` : `${integerPart}`
+  const fractionPart = value.slice(-decimal)
+  return fractionPart ? `${integerPart}.${fractionPart.slice(0, 3)}` : `${integerPart}`
 }
+
 const fromTokenBase = (value, decimal) => baseToConvertedUnit(value.toString(), decimal)
 
 const contracts = {
@@ -34,12 +30,6 @@ const contracts = {
       token: '0x73064ef6b8aa6d7a61da0eb45e53117718a3e891',
     },
   },
-}
-
-function findMatch(logData, txData, listings) {
-  // find matching log
-  // const match = find({ 'logData': { 'challengeID': logData.challengeID } }, listings)
-  // console.log('match:', match)
 }
 
 function buildContract(tcr = 'adChain', contract) {
@@ -112,7 +102,7 @@ function printClaimReward(logData) {
   console.log('')
 }
 
-const loadState = () => {
+function loadState() {
   try {
     const serializedState = localStorage.getItem('state')
     if (serializedState === null) {
@@ -124,7 +114,7 @@ const loadState = () => {
   }
 }
 
-const saveState = state => {
+function saveState(state) {
   try {
     const serializedState = JSON.stringify(state)
     localStorage.setItem('state', serializedState)
