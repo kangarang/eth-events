@@ -39,6 +39,16 @@ function buildContract(tcr = 'adChain', contract) {
   }
 }
 
+function printLogsBlockRange(fromBlock, toBlock, currentBlock, logs) {
+  console.log('logs[0]:', logs[0])
+  console.log('=======================================')
+  console.log(`logs searched between ${fromBlock} - ${toBlock}`)
+  console.log('currentBlock:', currentBlock)
+  console.log(`logs found between: ${logs[0].txData.blockNumber} - ${logs[logs.length - 1].txData.blockNumber}`)
+  console.log('=======================================')
+  console.log('')
+}
+
 function printTransfers(logs) {
   console.log('logs.length:', logs.length)
   logs.forEach(({ logData, txData }) => {
@@ -127,6 +137,7 @@ module.exports = {
   printTransfers,
   buildContract,
   diffBalances,
+  printLogsBlockRange,
   printCommitVote,
   printClaimReward,
   loadState,
