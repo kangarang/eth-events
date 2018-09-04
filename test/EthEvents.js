@@ -1,7 +1,11 @@
 const Ethjs = require('ethjs')
 const test = require('tape')
 const EthEvents = require('../lib/index.js')
-const { buildContract, printLogsBlockRange } = require('../src/utils')
+const {
+  buildContract,
+  printLogsBlockRange,
+  printTxHashBlockNumbers,
+} = require('../src/utils')
 
 test('EthEvents.getLogs - Transfer', async t => {
   try {
@@ -10,7 +14,7 @@ test('EthEvents.getLogs - Transfer', async t => {
     const ethEvents = new EthEvents(ethjs, contract)
     const currentBlock = (await ethjs.blockNumber()).toNumber()
 
-    const fromBlock = 6023781
+    const fromBlock = 6045678
     const toBlock = 'latest'
     const eventNames = ['Transfer']
     const indexedFilterValues = {
@@ -21,8 +25,10 @@ test('EthEvents.getLogs - Transfer', async t => {
     const logs = await ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues, true)
 
     if (logs.length) {
+      printTxHashBlockNumbers(logs)
       printLogsBlockRange(fromBlock, toBlock, currentBlock, logs)
     }
+    console.log(logs.length)
 
     t.notEqual(logs.length, 0, 'should have length')
     t.end()

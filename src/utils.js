@@ -39,12 +39,22 @@ function buildContract(tcr = 'adChain', contract) {
   }
 }
 
+function printTxHashBlockNumbers(logs) {
+  logs.forEach(log => {
+    console.log(log.txData.txHash.slice(0, 12), log.txData.blockNumber)
+  })
+}
+
 function printLogsBlockRange(fromBlock, toBlock, currentBlock, logs) {
-  console.log('logs[0]:', logs[0])
+  console.log('')
   console.log('=======================================')
   console.log(`logs searched between ${fromBlock} - ${toBlock}`)
   console.log('currentBlock:', currentBlock)
-  console.log(`logs found between: ${logs[0].txData.blockNumber} - ${logs[logs.length - 1].txData.blockNumber}`)
+  console.log(
+    `logs found between: ${logs[0].txData.blockNumber} - ${
+      logs[logs.length - 1].txData.blockNumber
+    }`
+  )
   console.log('=======================================')
   console.log('')
 }
@@ -134,6 +144,7 @@ function saveState(state) {
 }
 
 module.exports = {
+  printTxHashBlockNumbers,
   printTransfers,
   buildContract,
   diffBalances,
