@@ -22,9 +22,12 @@ const contract = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
 }
+// eth-events will batch getLogs every 5000 blocks by default
+// optionally you can specify a different threshold here
+const blockRangeThreshold = 20000
 
 // init eth-events
-const ethEvents = new EthEvents(ethjs, contract)
+const ethEvents = new EthEvents(ethjs, contract, blockRangeThreshold)
 
 // block range
 const fromBlock = '6000000'
