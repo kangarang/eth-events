@@ -1,4 +1,3 @@
-const Ethjs = require('ethjs')
 const test = require('tape')
 const EthEvents = require('../lib/index.js')
 const {
@@ -9,12 +8,10 @@ const {
 
 test('EthEvents.getLogs - Transfer', async t => {
   try {
-    const ethjs = new Ethjs(new Ethjs.HttpProvider('https://mainnet.infura.io'))
     const contract = buildContract('adChain', 'token')
-    const ethEvents = new EthEvents(ethjs, contract)
-    const currentBlock = (await ethjs.blockNumber()).toNumber()
+    const ethEvents = new EthEvents(contract, 5000)
 
-    const fromBlock = 6045678
+    const fromBlock = 6270678
     const toBlock = 'latest'
     const eventNames = ['Transfer']
     const indexedFilterValues = {
@@ -23,11 +20,6 @@ test('EthEvents.getLogs - Transfer', async t => {
 
     // prettier-ignore
     const logs = await ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues, true)
-
-    if (logs.length) {
-      printTxHashBlockNumbers(logs)
-      printLogsBlockRange(fromBlock, toBlock, currentBlock, logs)
-    }
     console.log(logs.length)
 
     t.notEqual(logs.length, 0, 'should have length')
@@ -38,9 +30,8 @@ test('EthEvents.getLogs - Transfer', async t => {
 })
 
 test('EthEvents.getLogs - Approval', async t => {
-  const ethjs = new Ethjs(new Ethjs.HttpProvider('https://mainnet.infura.io'))
   const contract = buildContract('adChain', 'token')
-  const ethEvents = new EthEvents(ethjs, contract)
+  const ethEvents = new EthEvents(contract, 5000)
 
   const fromBlock = 6150000
   const toBlock = 'latest'
@@ -53,10 +44,8 @@ test('EthEvents.getLogs - Approval', async t => {
 })
 
 test('EthEvents.getLogs - Transfer to 0xb4b26709f...', async t => {
-  const ethjs = new Ethjs(new Ethjs.HttpProvider('https://mainnet.infura.io'))
   const contract = buildContract('adChain', 'token')
-  const ethEvents = new EthEvents(ethjs, contract)
-  const currentBlock = (await ethjs.blockNumber()).toNumber()
+  const ethEvents = new EthEvents(contract, 5000)
 
   const fromBlock = 6150000
   const toBlock = 'latest'
@@ -66,10 +55,6 @@ test('EthEvents.getLogs - Transfer to 0xb4b26709f...', async t => {
   }
 
   const logs = await ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues)
-
-  if (logs.length) {
-    printLogsBlockRange(fromBlock, toBlock, currentBlock, logs)
-  }
 
   t.notEqual(logs.length, 0, 'should have length')
   t.end()

@@ -25,9 +25,11 @@ const contracts = {
       token: '0xd0d6d6c5fe4a677d343cc433536bb717bae167dd',
       voting: '0xb4b26709ffed2cd165b9b49eea1ac38d133d7975',
       registry: '0x5e2eb68a31229b469e34999c467b017222677183',
+      network: 'mainnet',
     },
     ethaireum: {
       token: '0x73064ef6b8aa6d7a61da0eb45e53117718a3e891',
+      network: 'rinkeby',
     },
   },
 }
@@ -36,6 +38,8 @@ function buildContract(tcr = 'adChain', contract) {
   return {
     abi: contracts.abis[contract],
     address: contracts.addresses[tcr][contract],
+    network: contracts.addresses[tcr].network,
+    blockNumber: 3000000
   }
 }
 
