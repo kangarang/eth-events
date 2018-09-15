@@ -2,34 +2,25 @@
   "name": "eth-events",
   "version": "0.4.0",
   "description": "A library for querying and decoding Ethereum event logs",
-  "directories": {
-    "lib": "./lib",
-    "src": "./src",
-    "dist": "./dist"
-  },
-  "main": "lib/index.js",
+  "main": "index.js",
   "scripts": {
-    "build": "parcel build src/index.html --public-url ./",
-    "clear": "rm -rf dist .cache",
-    "deploy": "yarn run clear && yarn run build && gh-pages -d dist",
-    "dev": "yarn run build && yarn start",
-    "start": "parcel src/index.html",
+    "build": "parcel index.js",
+    "deploy": "yarn run build && gh-pages",
     "test": "tape test/**/*.js"
   },
   "author": "kangarang",
   "license": "MIT",
   "dependencies": {
-    "ethers": "3.0.27",
+    "ethers": "3.0.29",
     "lodash": "4.17.10"
   },
   "devDependencies": {
+    "@types/lodash": "4.14.116",
     "babel-plugin-transform-object-rest-spread": "6.26.0",
     "babel-plugin-transform-react-jsx": "6.24.1",
     "babel-polyfill": "6.26.0",
     "babel-preset-env": "1.7.0",
-    "ethjs": "0.4.0",
     "gh-pages": "1.2.0",
-    "hyperapp": "1.2.8",
     "parcel-bundler": "1.9.7",
     "prettier": "1.14.2",
     "tape": "4.9.1"

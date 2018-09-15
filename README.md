@@ -8,36 +8,33 @@
 
 ## Usage
 
-```js
-const Ethjs = require('ethjs')
+```ts
 const EthEvents = require('eth-events')
-const Token = require('./EIP20.json')
+const Token = require('./abis/EIP20.json')
 
-// setup ethjs
-const provider = new Ethjs.HttpProvider(`https://mainnet.infura.io`)
-const ethjs = new Ethjs(provider)
-
-// abi/address of the contract to query
-const contract = {
+// abi/address/network
+const contract: any = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
+  network: 'mainnet',
+  blockNumber: 5000000 // optional, default start block of the contract to query
 }
 // eth-events will batch getLogs every 5000 blocks by default
 // optionally you can specify a different threshold here
-const blockRangeThreshold = 20000
+const blockRangeThreshold: number = 20000
 
 // init eth-events
-const ethEvents = new EthEvents(ethjs, contract, blockRangeThreshold)
+const ethEvents = new EthEvents(contract, blockRangeThreshold)
 
 // block range
-const fromBlock = '6000000'
-const toBlock = 'latest'
+const fromBlock: number = 6000000
+const toBlock: number|string = 'latest'
 
 // event name(s)
-const eventNames = ['Transfer']
+const eventNames: string[] = ['Transfer', 'Approval']
 
 // indexed event emission arg values (un-hashed filter topics)
-const indexedFilterValues = {
+const indexedFilterValues: any = {
   _to: '0xCAFEDEADBEEF12345678912456789',
 }
 
@@ -47,28 +44,23 @@ ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues).then(logs
     console.log(log)
     // {
     //   logData: {
-    //     _value: <BN: 16bcc41e90>,
     //     _from: '0xDEADBEEFCAFE12345678912456789',
     //     _to: '0xCAFEDEADBEEF12345678912456789',
-    //     _eventName: 'Transfer',
+    //     _value: BigNumber { _bn: <BN: 16bcc41e90> },
     //   },
     //   txData: {
     //     txHash: '0xBEEFDEADCAFE12345678912456789',
-    //     logIndex: '53',
-    //     blockNumber: '6000000',
-    //     blockTimestamp: '12341234',
+    //     logIndex: 53,
+    //     blockNumber: 6000000,
+    //     blockTimestamp: 12341234,
     //   },
-    //   eventName: 'Transfer',
+    //   contractAddress: '0xDEADBEEFCAFE12345678912456789',
+    //   eventName: 'Transfer'
     // }
   })
-})
-
-// batch every 75,000 blocks
-ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues, true).then(logs => {
-  // ...
 })
 ```
 
 ## Test
 
-`npm test`
+`yarn test`
