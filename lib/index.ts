@@ -14,21 +14,10 @@ interface ContractDetails {
   blockNumber: number
   network: string
 }
-interface EventParser {
-  (topics: any, data: any): any
-}
-// interface RawLog {
-//   logIndex: number
-//   blockHash: string
-//   transactionHash: string
-//   address: string
-//   topics: string[]
-//   data: any
-// }
 interface EventInfo {
   name: string
   topics: string[]
-  parse: EventParser
+  parse(topics: any, data: any): any
 }
 interface EthersEventInterfaces {
   [eventName: string]: EventInfo
@@ -209,7 +198,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
 
     const decodedLogs: any[] = await Promise.all(
       rawLogs.map((log: any) => {
-        const eventInfo = getEventInfoFromLog(log)
+        const eventInfo: EventInfo = getEventInfoFromLog(log)
         return eventInfo.parse(log.topics, log.data)
       })
     )
@@ -218,7 +207,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
 
   // Normalize/consolidate return data
   // Return: { logData, txData, eventName, contractAddress }
-  async function normalizeLogs(rawLogs: any[], decodedLogs: any[]) {
+  async function normalizeLogs(rawLogs: any[], decodedLogs: any[]): Promise<any> {
     try {
       return Promise.all(
         rawLogs.map(async (log, index) => {

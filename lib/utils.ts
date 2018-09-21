@@ -1,12 +1,12 @@
 'use strict'
 
-const utils = require('ethers/utils')
+const ethUtils = require('ethers/utils')
 
-const Token = require('./abis/EIP20.json')
-const Registry = require('./abis/Registry.json')
-const PLCRVoting = require('./abis/PLCRVoting.json')
+const Token = require('../abis/EIP20.json')
+const Registry = require('../abis/Registry.json')
+const PLCRVoting = require('../abis/PLCRVoting.json')
 
-const contracts = {
+const contracts: any = {
   abis: {
     token: Token.abi,
     voting: PLCRVoting.abi,
@@ -29,10 +29,10 @@ const contracts = {
   },
 }
 
-function buildContract(tcr = 'adChain', contract) {
+function buildContract(tcr: string = 'adChain', contract: string): any {
   return {
     abi: contracts.abis[contract],
-    address: utils.getAddress(contracts.addresses[tcr][contract]),
+    address: ethUtils.getAddress(contracts.addresses[tcr][contract]),
     network: contracts.addresses[tcr].network,
     blockNumber: contract === 'token' ? 2686413 : 5470665,
   }

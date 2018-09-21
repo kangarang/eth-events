@@ -11,13 +11,10 @@ interface ContractDetails {
     blockNumber: number;
     network: string;
 }
-interface EventParser {
-    (topics: any, data: any): any;
-}
 interface EventInfo {
     name: string;
     topics: string[];
-    parse: EventParser;
+    parse(topics: any, data: any): any;
 }
 interface EthersEventInterfaces {
     [eventName: string]: EventInfo;
