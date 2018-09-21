@@ -5,7 +5,7 @@ const { buildContract } = require('../utils')
 test('Should get 8 logs between blocks 5545403 - 5546403 from the correct address', async t => {
   try {
     const contract = buildContract('adChain', 'token')
-    const ethEvents = new EthEvents(contract, 10000)
+    const ethEvents = EthEvents(contract, 10000)
     const eventNames = ['Transfer', 'Approval']
 
     const logs = await ethEvents.getLogs(5545403, 5546403, eventNames, {}, true)
@@ -29,7 +29,7 @@ test('Should get 8 logs between blocks 5545403 - 5546403 from the correct addres
 test('Should get logs with specified indexed values', async t => {
   try {
     const contract = buildContract('adChain', 'token')
-    const ethEvents = new EthEvents(contract, 10000)
+    const ethEvents = EthEvents(contract, 10000)
 
     const fromBlock = 5545403
     const toBlock = 5646403
