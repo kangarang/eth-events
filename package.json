@@ -2,7 +2,8 @@
   "name": "eth-events",
   "version": "0.5.0",
   "description": "A library for querying and decoding Ethereum event logs",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "parcel index.js",
     "deploy": "yarn run build && gh-pages",
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@types/lodash": "4.14.116",
+    "@types/node": "10.10.1",
     "babel-plugin-transform-object-rest-spread": "6.26.0",
     "babel-plugin-transform-react-jsx": "6.24.1",
     "babel-polyfill": "6.26.0",
@@ -23,7 +25,8 @@
     "gh-pages": "1.2.0",
     "parcel-bundler": "1.9.7",
     "prettier": "1.14.2",
-    "tape": "4.9.1"
+    "tape": "4.9.1",
+    "typescript": "3.0.3"
   },
   "repository": {
     "type": "git",

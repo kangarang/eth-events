@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "strictNullChecks": true,
+    "module": "es2015",
+    "target": "es2015",
+    "lib": ["es2017"],
+    "allowSyntheticDefaultImports": true,
+    "moduleResolution": "node",
+    "noFallthroughCasesInSwitch": true,
+    "noEmitOnError": false,
+    "noErrorTruncation": true,
+    "noImplicitAny": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "pretty": true
+  },
+  "files": ["index.ts"]
+}
