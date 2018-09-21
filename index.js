@@ -9,18 +9,17 @@ const isArray = require('lodash/fp/isArray')
 const isUndefined = require('lodash/fp/isUndefined')
 
 function EthEvents(contractDetails, blockRangeThreshold = 5000) {
-  const contractAddress = utils.getAddress(contractDetails.address)
-  const contractAbi = contractDetails.abi
-  const provider = new ethers.providers.InfuraProvider(contractDetails.network)
+  const { abi, blockNumber, network, address } = contractDetails
+  const contractAddress = utils.getAddress(address)
+  const provider = new ethers.providers.InfuraProvider(network)
   // Verifies there's a contract that exists at the specified address & network
   provider.getCode(contractAddress).then(code => {
     if (code === '0x') {
       throw new Error('NO CODE')
     }
   })
-  const contract = new ethers.Contract(contractAddress, contractDetails.abi, provider)
-  const blockStart = contractDetails.blockNumber || 1
-  const eventIFaces = contract.interface.events
+  const eventIFaces = new ethers.Contract(contractAddress, abi, provider).interface.events
+  const blockStart = blockNumber || 1
 
   // prettier-ignore
   // Validates block range
@@ -229,7 +228,7 @@ function EthEvents(contractDetails, blockRangeThreshold = 5000) {
 
     if (Object.keys(indexFilterValues).length > 0) {
       // prettier-ignore
-      const eventAbi = find({ 'name': eventNames[0] }, contractAbi)
+      const eventAbi = find({ 'name': eventNames[0] }, abi)
       topics = [...topics, ...getTopicsForIndexedArgs(eventAbi, indexFilterValues)]
     }
 
@@ -303,7 +302,6 @@ function EthEvents(contractDetails, blockRangeThreshold = 5000) {
   }
 
   return Object.freeze({
-    validateBlockNumbers,
     getLogs,
   })
 }
