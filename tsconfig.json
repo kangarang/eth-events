@@ -9,7 +9,7 @@
     "allowSyntheticDefaultImports": true,
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
-    "noEmitOnError": false,
+    "noEmitOnError": true,
     "noErrorTruncation": true,
     "noImplicitAny": true,
     "noImplicitReturns": true,
@@ -17,6 +17,5 @@
     "noUnusedParameters": true,
     "pretty": true
   },
-
   "include": ["./lib/**/*"]
 }

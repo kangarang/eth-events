@@ -4,37 +4,37 @@
 
 ## Install
 
-`npm install eth-events`
+    npm install eth-events
 
 ## Usage
 
-```ts
-const EthEvents = require('eth-events')
-const Token = require('./abis/EIP20.json')
+```js
+import EthEvents from 'eth-events'
+import Token from './abis/EIP20.json'
 
 // abi/address/network
-const contract: any = {
+const contract = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
   network: 'mainnet',
-  blockNumber: 5000000 // optional, default start block of the contract to query
+  blockNumber: 5000000, // optional, default start block of the contract to query
 }
 // eth-events will batch getLogs every 5000 blocks by default
 // optionally you can specify a different threshold here
-const blockRangeThreshold: number = 20000
+const blockRangeThreshold = 20000
 
 // init eth-events
-const ethEvents = new EthEvents(contract, blockRangeThreshold)
+const ethEvents = EthEvents(contract, blockRangeThreshold)
 
 // block range
-const fromBlock: number = 6000000
-const toBlock: number|string = 'latest'
+const fromBlock = 6000000
+const toBlock = 'latest'
 
 // event name(s)
-const eventNames: string[] = ['Transfer', 'Approval']
+const eventNames = ['Transfer', 'Approval']
 
 // indexed event emission arg values (un-hashed filter topics)
-const indexedFilterValues: any = {
+const indexedFilterValues = {
   _to: '0xCAFEDEADBEEF12345678912456789',
 }
 
@@ -61,6 +61,16 @@ ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues).then(logs
 })
 ```
 
-## Test
+## Development
 
-`yarn test`
+Test
+
+    npm test
+
+Compile typescript files and watch for changes
+
+    npm run dev
+
+Compile typescript files & declarations
+
+    npm run build

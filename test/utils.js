@@ -6,7 +6,7 @@ const Token = require('../abis/EIP20.json')
 const Registry = require('../abis/Registry.json')
 const PLCRVoting = require('../abis/PLCRVoting.json')
 
-const contracts: any = {
+const contracts = {
   abis: {
     token: Token.abi,
     voting: PLCRVoting.abi,
@@ -29,7 +29,7 @@ const contracts: any = {
   },
 }
 
-function buildContract(tcr: string = 'adChain', contract: string): any {
+function buildContract(tcr = 'adChain', contract) {
   return {
     abi: contracts.abis[contract],
     address: ethUtils.getAddress(contracts.addresses[tcr][contract]),

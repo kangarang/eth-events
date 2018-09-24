@@ -1,6 +1,6 @@
 const test = require('tape')
 const EthEvents = require('../dist')
-const { buildContract } = require('../dist/utils')
+const { buildContract } = require('./utils')
 
 test('Should get 8 logs between blocks 5545403 - 5546403 from the correct address', async t => {
   try {
