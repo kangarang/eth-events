@@ -1,5 +1,9 @@
 # eth-events
 
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkangarang%2Feth-events.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkangarang%2Feth-events?ref=badge_shield)
+
+[![Build Status](https://travis-ci.org/kangarang/eth-events.svg?branch=master)](https://travis-ci.org/kangarang/eth-events)
+
 `eth-events` is a library for querying and decoding Ethereum event logs
 
 ## Install
