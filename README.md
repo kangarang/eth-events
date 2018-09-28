@@ -1,4 +1,6 @@
 # eth-events
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkangarang%2Feth-events.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkangarang%2Feth-events?ref=badge_shield)
+
 
 [![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkangarang%2Feth-events.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkangarang%2Feth-events?ref=badge_shield)
 
@@ -78,3 +80,7 @@ Compile typescript files and watch for changes
 Compile typescript files & declarations
 
     npm run build
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Fkangarang%2Feth-events.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Fkangarang%2Feth-events?ref=badge_large)
