@@ -3,11 +3,10 @@
   "version": "0.6.0",
   "description": "A library for querying and decoding Ethereum event logs",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc --declaration",
     "dev": "tsc --watch",
-    "test": "tsc && tape test/**/*.js"
+    "test": "tsc && ts-node node_modules/tape/bin/tape test/*.ts"
   },
   "author": "kangarang",
   "license": "MIT",
@@ -18,8 +17,10 @@
   "devDependencies": {
     "@types/lodash": "4.14.116",
     "@types/node": "10.10.1",
+    "@types/tape": "4.2.32",
     "prettier": "1.14.2",
     "tape": "4.9.1",
+    "ts-node": "7.0.1",
     "typescript": "3.0.3"
   },
   "repository": {

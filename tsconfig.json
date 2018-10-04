@@ -1,21 +1,21 @@
 {
   "compilerOptions": {
     "outDir": "./dist/",
-    "sourceMap": true,
-    "strictNullChecks": true,
-    "module": "es2015",
-    "target": "es2015",
+    "module": "commonjs",
+    "target": "es5",
     "lib": ["es6"],
-    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
     "moduleResolution": "node",
+    "allowSyntheticDefaultImports": true,
+    "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "noEmitOnError": true,
     "noErrorTruncation": true,
-    "noImplicitAny": true,
     "noImplicitReturns": true,
-    "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "pretty": true
+    "pretty": true,
+    "strictNullChecks": true,
+    "suppressImplicitAnyIndexErrors": true
   },
-  "include": ["./lib/**/*"]
+  "include": ["lib"]
 }

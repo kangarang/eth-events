@@ -1,6 +1,4 @@
-{
-  "contractName": "EIP20",
-  "abi": [
+[
     {
       "constant": true,
       "inputs": [],
@@ -240,4 +238,3 @@
       "type": "function"
     }
   ]
-}

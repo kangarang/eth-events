@@ -1,12 +1,8 @@
 'use strict'
 
-const ethers = require('ethers')
-const utils = require('ethers/utils')
-const find = require('lodash/fp/find')
-const every = require('lodash/fp/every')
-const zipWith = require('lodash/fp/zipWith')
-const isArray = require('lodash/fp/isArray')
-const isUndefined = require('lodash/fp/isUndefined')
+import * as ethers from 'ethers'
+import * as utils from 'ethers/utils'
+import { find, every, isUndefined, isArray, zipWith, includes } from 'lodash/fp'
 
 interface ContractDetails {
   abi: any[]
@@ -21,10 +17,6 @@ interface EventInfo {
 }
 interface EthersEventInterfaces {
   [eventName: string]: EventInfo
-}
-interface EthersContractInterface {
-  events: EthersEventInterfaces
-  abi: any[]
 }
 interface GetLogsFilter {
   address: string
@@ -188,6 +180,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
     console.log(`Search: ${filter.fromBlock} - ${filter.toBlock}`)
     let rawLogs
     try {
+      // rawLogs = await provider.getLogs(filter)
       rawLogs = (await provider.getLogs(filter)).filter((log: any) =>
         matchesFilter(log, filter)
       )
@@ -284,7 +277,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
     const eventName: string = find(
       (eventName: string) => eventIFaces[eventName].topics[0] === log.topics[0],
       Object.keys(eventIFaces)
-    )
+    ) || ''
     return eventIFaces[eventName]
   }
 
@@ -298,7 +291,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
     })
   }
 
-  function getTopicsForIndexedArgs(abi: any, indexFilterValues: any): string {
+  function getTopicsForIndexedArgs(abi: any, indexFilterValues: any): any[] {
     const indexedInputs = abi.inputs.filter((input: any) => input.indexed)
     return indexedInputs.map((indexedInput: any) => {
       const { name } = indexedInput
@@ -319,7 +312,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
       !isUndefined(log) &&
       !isUndefined(log.address) &&
       !isUndefined(filter.address) &&
-      log.address !== filter.address
+      utils.getAddress(log.address) !== utils.getAddress(filter.address)
     ) {
       return false
     }
@@ -331,13 +324,12 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
 
   function matchesTopics(logTopics: any[], filterTopics: any[]): boolean {
     const matchTopic = zipWith(matchesTopic, logTopics, filterTopics)
-    const matchesTopics = every(matchTopic)
-    return matchesTopics
+    return every(Boolean, matchTopic)
   }
 
   function matchesTopic(logTopic: string, filterTopic: any): boolean {
     if (isArray(filterTopic)) {
-      return filterTopic.includes(logTopic)
+      return includes(logTopic, filterTopic)
     }
     if (typeof filterTopic === 'string') {
       return filterTopic === logTopic
@@ -351,4 +343,4 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
   })
 }
 
-module.exports = EthEvents
+export default EthEvents

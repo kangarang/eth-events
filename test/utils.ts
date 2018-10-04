@@ -1,16 +1,20 @@
 'use strict'
 
-const ethUtils = require('ethers/utils')
+import * as ethUtils from 'ethers/utils'
+import { Token, PLCRVoting, Registry } from './abis'
 
-const Token = require('../abis/EIP20.json')
-const Registry = require('../abis/Registry.json')
-const PLCRVoting = require('../abis/PLCRVoting.json')
+interface Contract {
+  abi: any[]
+  address: string
+  network: string
+  blockNumber: number
+}
 
 const contracts = {
   abis: {
-    token: Token.abi,
-    voting: PLCRVoting.abi,
-    registry: Registry.abi,
+    token: Token,
+    voting: PLCRVoting,
+    registry: Registry,
   },
   addresses: {
     adChain: {
@@ -29,7 +33,7 @@ const contracts = {
   },
 }
 
-function buildContract(tcr = 'adChain', contract) {
+function buildContract(tcr: string = 'adChain', contract: string): Contract {
   return {
     abi: contracts.abis[contract],
     address: ethUtils.getAddress(contracts.addresses[tcr][contract]),
@@ -38,6 +42,4 @@ function buildContract(tcr = 'adChain', contract) {
   }
 }
 
-module.exports = {
-  buildContract,
-}
+export { buildContract }
