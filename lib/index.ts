@@ -1,7 +1,6 @@
 'use strict'
 
-import * as ethers from 'ethers'
-import * as utils from 'ethers/utils'
+import { ethers, utils } from 'ethers'
 import { find, every, isUndefined, isArray, zipWith, includes } from 'lodash/fp'
 
 interface ContractDetails {
@@ -41,7 +40,7 @@ function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
       throw new Error('NO CODE')
     }
   })
-  const eventIFaces: EthersEventInterfaces = new ethers.Contract(
+  const eventIFaces: any = new ethers.Contract(
     contractAddress,
     abi,
     provider
