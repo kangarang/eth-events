@@ -1,345 +1,174 @@
-'use strict'
+'use strict';
 
-import { ethers, utils } from 'ethers'
-import { find, every, isUndefined, isArray, zipWith, includes } from 'lodash/fp'
+import { ethers, providers, utils } from 'ethers';
+import { Block, Log, TransactionReceipt } from 'ethers/providers';
+import { LogDescription, Transaction } from 'ethers/utils';
+const range = require('lodash/range');
+const flatten = require('lodash/flatten');
 
-interface ContractDetails {
-  abi: any[]
-  address: string
-  blockNumber: number
-  network: string
+interface IEthEvent {
+  name?: string;
+  values?: any;
+  sender?: string;
+  recipient?: string;
+  txHash?: string;
+  logIndex?: number;
+  timestamp?: number;
+  blockNumber?: number;
+  toContract?: string;
 }
-interface EventInfo {
-  name: string
-  topics: string[]
-  parse(topics: any, data: any): any
-}
-interface EthersEventInterfaces {
-  [eventName: string]: EventInfo
-}
-interface GetLogsFilter {
-  address: string
-  fromBlock: number
-  toBlock: number
-  topics: any[]
-}
-interface TxData {
-  txHash: string
-  logIndex: number
-  blockNumber: number
-  blockTimestamp: number
+interface IContractDetails {
+  abi: any[];
+  address: string;
+  name?: string;
 }
 
-function EthEvents(contractDetails: any, blockRangeThreshold: number = 5000) {
-  const { abi, address, blockNumber, network }: ContractDetails = contractDetails
-  const contractAddress: string = utils.getAddress(address)
-  const provider: any = new ethers.providers.InfuraProvider(network)
-  // Verifies there's a contract that exists at the specified address & network
-  provider.getCode(contractAddress).then((code: string) => {
-    if (code === '0x') {
-      throw new Error('NO CODE')
+export function EthEvents(
+  contractObjects: IContractDetails[],
+  jsonRpcEndpoint: string,
+  startBlock: number = 1
+) {
+  const provider: providers.JsonRpcProvider = new providers.JsonRpcProvider(jsonRpcEndpoint);
+  let contractAddresses: string[] = [];
+  let fromBlock: number = startBlock;
+  const contracts: ethers.Contract[] = contractObjects.map((c: IContractDetails) => {
+    let contract: any = new ethers.Contract(c.address, c.abi, provider);
+    // set contract name and address
+    if ('name' in c) {
+      contract.contractName = c.name;
     }
-  })
-  const eventIFaces: any = new ethers.Contract(
-    contractAddress,
-    abi,
-    provider
-  ).interface.events
-  const blockStart: number = blockNumber || 1
+    contractAddresses = contractAddresses.concat(utils.getAddress(c.address));
+    return contract;
+  });
 
-  // prettier-ignore
-  // Validates block range
-  function validateBlockNumbers(fromBlock: string|number, toBlock: string|number, currentBlock: number) {
-    if (fromBlock > currentBlock || fromBlock < 0) {
-      throw new Error('Invalid fromBlock. It must be less than the currentBlock || it cannot be negative')
+  /**
+   * Gets all events from genesis block (contract) -> current block
+   */
+  async function getAllEvents(startBlock?: number, endBlock?: number): Promise<IEthEvent[]> {
+    const currentBlockNumber: number = await provider.getBlockNumber();
+    if (startBlock) {
+      fromBlock = startBlock;
     }
-    if (fromBlock > toBlock) {
-      throw new Error('Invalid blockRange. fromBlock must be less than toBlock')
-    }
-    if (toBlock > currentBlock) {
-      throw new Error('Invalid toBlock. It must be less than or equal to the currentblock')
-    }
-  }
+    // TODO: >1 block on mainnet
+    let toBlock: number =
+      endBlock || (provider.network.chainId === 420 ? currentBlockNumber : fromBlock + 1);
+    const blocksRange: number[] = range(fromBlock, toBlock);
 
-  // prettier-ignore
-  // Gets logs using a block range
-  async function getLogs(
-    fromBlock: any = blockStart,
-    toBlock: any = 'latest',
-    eventNames: string[] = [],
-    indexedFilterValues: any = {},
-    batch: boolean = true
-  ): Promise<any> {
-    // Get the current block number
-    const currentBlock: number = await provider.getBlockNumber()
-    console.log(`
-        Get logs from: ${contractAddress}
-        Current block: ${currentBlock}
-        `)
-    try {
-      // Validate block range
-      validateBlockNumbers(fromBlock, toBlock, currentBlock)
-    } catch (error) {
-      console.log('Error while validating block numbers:', error.toString())
-      console.log(`
-        New block range: ${blockStart} - ${currentBlock}
-        `)
-      fromBlock = blockStart
-      toBlock = 'latest'
-    }
-    // Reset block to start looking for logs
-    provider.resetEventsBlock(fromBlock)
+    console.log();
+    console.log('current block:', currentBlockNumber);
+    console.log('blocksRange:', blocksRange);
+    console.log();
 
-    // Edit toBlock if string is provided
-    if (toBlock === 'latest') {
-      toBlock = currentBlock
-    }
-    // Create a filter with the appropriate block_numbers and topics
-    const filter: GetLogsFilter = createFilter(
-      { fromBlock, toBlock }, eventNames, indexedFilterValues
-    )
+    const events: IEthEvent[] = await Promise.all(
+      blocksRange.map(async blockNumber => {
+        try {
+          // get block
+          const block: Block = await provider.getBlock(blockNumber, false);
 
-    // CASE: Too large of a gap -- over the block range threshold!
-    if (batch && toBlock - fromBlock > blockRangeThreshold) {
-      console.log(`
-        Batching logs from ${fromBlock} to ${toBlock}...
-        `)
-      // Edit the filter for the first batched set of blocks
-      const newFilter: GetLogsFilter = {
-        ...filter,
-        toBlock: fromBlock + blockRangeThreshold,
-      }
-      return batchGetLogs(newFilter, toBlock)
-    }
-
-    try {
-      console.log(`Getting logs from ${fromBlock} to ${toBlock}...`)
-      // CASE: within threshold range. get logs
-      return getDecodedNormalizedLogs(filter)
-    } catch (error) {
-      throw new Error('Error while trying to get logs:')
-    }
-  }
-
-  // If block range is not within the threshold, batch getLogs using the threshold value
-  async function batchGetLogs(
-    filter: GetLogsFilter,
-    finalBlock: number,
-    logs: any[] = []
-  ): Promise<any> {
-    if (filter.toBlock < finalBlock) {
-      try {
-        // toBlock is less than the finalBlock, Get logs with the incoming filter
-        const normalizedLogs: any[] = await getDecodedNormalizedLogs(filter)
-        const accLogs: any[] = logs.concat(normalizedLogs)
-        // Set new filter
-        const newFilter: GetLogsFilter = {
-          ...filter,
-          fromBlock: filter.toBlock + 1,
-          toBlock: filter.toBlock + blockRangeThreshold,
-        }
-        console.log(`Found ${normalizedLogs.length} logs`)
-        console.log('Subtotal logs:', accLogs.length)
-        console.log('Remaining blocks:', finalBlock - newFilter.fromBlock)
-        console.log()
-
-        // Recurse: new filter, new accumulation of logs
-        return batchGetLogs(newFilter, finalBlock, accLogs)
-      } catch (error) {
-        console.log('Error while getting batched logs:', error)
-        return batchGetLogs(filter, finalBlock, logs)
-      }
-    }
-
-    // ----------------------------------------
-    // toBlock is > finalBlock
-    // Get final logs from the remaining blocks
-    // ----------------------------------------
-
-    try {
-      const lastFilter = {
-        ...filter,
-        toBlock: finalBlock,
-      }
-      const lastNormalizedLogs = await getDecodedNormalizedLogs(lastFilter)
-      console.log(`Found ${lastNormalizedLogs.length} logs`)
-      // Return final array of decoded normalized logs
-      const finalLogs = logs.concat(lastNormalizedLogs)
-      console.log(`
-        Total logs: ${finalLogs.length}
-      `)
-      return finalLogs
-    } catch (error) {
-      console.log('Error while getting final logs:', error)
-      return batchGetLogs(filter, finalBlock, logs)
-    }
-  }
-
-  async function getDecodedNormalizedLogs(filter: GetLogsFilter): Promise<any> {
-    console.log(`Search: ${filter.fromBlock} - ${filter.toBlock}`)
-    let rawLogs
-    try {
-      // rawLogs = await provider.getLogs(filter)
-      rawLogs = (await provider.getLogs(filter)).filter((log: any) =>
-        matchesFilter(log, filter)
-      )
-    } catch (error) {
-      console.log('Error while decoding and normalizing logs:', error)
-      return getDecodedNormalizedLogs(filter)
-    }
-
-    const decodedLogs: any[] = await Promise.all(
-      rawLogs.map((log: any) => {
-        const eventInfo: EventInfo = getEventInfoFromLog(log)
-        return eventInfo.parse(log.topics, log.data)
-      })
-    )
-    return normalizeLogs(rawLogs, decodedLogs)
-  }
-
-  // Normalize/consolidate return data
-  // Return: { logData, txData, eventName, contractAddress }
-  async function normalizeLogs(rawLogs: any[], decodedLogs: any[]): Promise<any> {
-    try {
-      return Promise.all(
-        rawLogs.map(async (log, index) => {
-          let block
           try {
-            block = await provider.getBlock(log.blockHash)
-          } catch (err) {
-            console.log('Error while trying to get block:', err.toString())
-            if (err.responseText) {
-              console.log(err.responseText)
+            // get block tx receipts
+            const txReceipts: TransactionReceipt[] = await Promise.all(
+              block.transactions.map((tx: string) => provider.getTransactionReceipt(tx))
+            );
+            // FILTER: only txs w/ Logs & to/from Contract addresses
+            const filtered: TransactionReceipt[] = txReceipts.filter(
+              (receipt: TransactionReceipt) =>
+                receipt.from &&
+                receipt.to &&
+                receipt.logs &&
+                receipt.logs.length > 0 &&
+                (contractAddresses.includes(utils.getAddress(receipt.from)) ||
+                  contractAddresses.includes(utils.getAddress(receipt.to)))
+            );
+
+            try {
+              // get decoded logs
+              const logsInBlock: IEthEvent[] = decodeLogsByTxReceipts(block.timestamp, filtered);
+              // [[Log, Log]] -> [Log, Log]
+              // [[]] -> []
+              return flatten(logsInBlock);
+            } catch (error) {
+              console.error(`ERROR while decoding tx receiptS: ${error.message}`);
+              throw error;
             }
-            console.log('Block:', log.blockHash)
-            console.log('Log:', rawLogs[index])
-            console.log('Index:', index)
-            console.log('Trying again')
-            block = await provider.getBlock(log.blockHash)
+          } catch (error) {
+            console.error(`ERROR while getting tx receipts: ${error.message}`);
+            throw error;
           }
-          // Decoded log
-          const logData = decodedLogs[index]
-          // Block and transaction essentials
-          const txData: TxData = {
-            txHash: log.transactionHash,
-            logIndex: log.logIndex,
-            blockNumber: block.number,
-            blockTimestamp: block.timestamp,
-          }
-          return {
-            logData,
-            txData,
-            contractAddress: log.address,
-            eventName: Object.keys(eventIFaces).filter(
-              ev => eventIFaces[ev].topics[0] === log.topics[0]
-            )[0],
-          }
-        })
-      )
-    } catch (error) {
-      console.log('Error while trying to get blocks for logs:', error.toString())
-      console.log('Trying again')
-      setTimeout(() => {
-        return normalizeLogs(rawLogs, decodedLogs)
-      }, 500)
-    }
+        } catch (error) {
+          // TODO: retry
+          console.error(`ERROR while getting block ${blockNumber}: ${error.message}`);
+          throw error;
+        }
+      })
+    );
+    // [[], [], [Log, Log]] -> [Log, Log]
+    return flatten(events);
   }
 
-  function createFilter(
-    blockRange: any,
-    eventNames: any[] = [],
-    indexFilterValues: any = {}
-  ) {
-    const { fromBlock, toBlock } = blockRange
-    const filter = {
-      fromBlock,
-      toBlock,
-      address: contractAddress,
-    }
-
-    let topics: any[] = [getEventSignatureTopicsByEventNames(eventNames)]
-
-    if (eventNames.length === 0) {
-      topics = [getAllEventSignatureTopics()]
-    }
-
-    if (Object.keys(indexFilterValues).length > 0) {
-      // prettier-ignore
-      const eventAbi: any = find({ 'name': eventNames[0] }, abi)
-      topics = [...topics, ...getTopicsForIndexedArgs(eventAbi, indexFilterValues)]
-    }
-
-    return { ...filter, topics }
-  }
-
-  function getEventInfoFromLog(log: any): EventInfo {
-    const eventName: string = find(
-      (eventName: string) => eventIFaces[eventName].topics[0] === log.topics[0],
-      Object.keys(eventIFaces)
-    ) || ''
-    return eventIFaces[eventName]
-  }
-
-  function getEventSignatureTopicsByEventNames(eventNames: string[]): string[] {
-    return eventNames.map(eventName => eventIFaces[eventName].topics[0])
-  }
-
-  function getAllEventSignatureTopics(): any[] {
-    return Object.keys(eventIFaces).map(eventName => {
-      return eventIFaces[eventName].topics[0]
-    })
-  }
-
-  function getTopicsForIndexedArgs(abi: any, indexFilterValues: any): any[] {
-    const indexedInputs = abi.inputs.filter((input: any) => input.indexed)
-    return indexedInputs.map((indexedInput: any) => {
-      const { name } = indexedInput
-      if (isUndefined(indexFilterValues[name])) {
-        return null
+  /**
+   * Gets decoded logs from transaction receipts in a single block
+   */
+  function decodeLogsByTxReceipts(
+    timestamp: number,
+    txReceipts: TransactionReceipt[]
+  ): IEthEvent[] {
+    // prettier-ignore
+    return txReceipts.map((receipt: TransactionReceipt) => {
+      try {
+        const events: IEthEvent[][] = contracts.map((c: ethers.Contract) =>
+          decodeLogs(c, timestamp, receipt)
+        );
+        return flatten(events);
+      } catch (error) {
+        // prettier-ignore
+        const sliced: string = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : 'undefined tx hash';
+        console.error(`ERROR while decoding tx receipt ${sliced}: ${error.message}`);
+        throw error;
       }
-      const value = indexFilterValues[name]
-      const arrayish = utils.arrayify(value)
-      // Zeros prepended to 32 bytes
-      const padded = utils.padZeros(arrayish, 32)
-      const topic = utils.hexlify(padded)
-      return topic
-    })
+    });
   }
 
-  function matchesFilter(log: any, filter: GetLogsFilter): boolean {
-    if (
-      !isUndefined(log) &&
-      !isUndefined(log.address) &&
-      !isUndefined(filter.address) &&
-      utils.getAddress(log.address) !== utils.getAddress(filter.address)
-    ) {
-      return false
-    }
-    if (!isUndefined(filter.topics)) {
-      return matchesTopics(log.topics, filter.topics)
-    }
-    return true
-  }
+  /**
+   * Decodes raw logs using an ethers.js contract interface
+   */
+  function decodeLogs(
+    contract: ethers.Contract,
+    timestamp: number,
+    receipt: TransactionReceipt
+  ): IEthEvent[] {
+    // prettier-ignore
+    return (receipt as any).logs
+      .map((log: Log): IEthEvent => {
+        const decoded: LogDescription = contract.interface.parseLog(log);
 
-  function matchesTopics(logTopics: any[], filterTopics: any[]): boolean {
-    const matchTopic = zipWith(matchesTopic, logTopics, filterTopics)
-    return every(Boolean, matchTopic)
-  }
+        if (decoded) {
+          const { name, values } = decoded;
+          const { transactionHash: txHash, blockNumber, to, from } = receipt;
 
-  function matchesTopic(logTopic: string, filterTopic: any): boolean {
-    if (isArray(filterTopic)) {
-      return includes(logTopic, filterTopic)
-    }
-    if (typeof filterTopic === 'string') {
-      return filterTopic === logTopic
-    }
-    // null topic is a wildcard
-    return true
+          return {
+            name,
+            values,
+            sender: from,
+            recipient: to,
+            blockNumber,
+            timestamp,
+            txHash,
+            logIndex: log.logIndex,
+            toContract:
+              to && utils.getAddress(to) === contract.address && 'contractName' in contract
+                ? contract.contractName
+                : 'n/a',
+          };
+        }
+
+        // null || custom, decoded log
+        return decoded;
+      })
+      .filter(l => l !== null);
   }
 
   return Object.freeze({
-    getLogs,
-  })
+    getAllEvents,
+  });
 }
-
-export default EthEvents

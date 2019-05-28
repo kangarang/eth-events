@@ -1,9 +1,9 @@
 {
   "compilerOptions": {
-    "outDir": "./dist/",
+    "outDir": "dist",
     "module": "commonjs",
     "target": "es5",
-    "lib": ["es6"],
+    "lib": ["es2017"],
     "sourceMap": true,
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
