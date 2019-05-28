@@ -7,14 +7,20 @@ const contractAddresses: string[];
 const contractABIs: any[];
 const startBlock: string;
 
-interface EthEvent {
-  
+interface IEthEvent {
+  sender: string;
+  recipient: string;
+  timestamp: number;
+  blockNumber: number;
+  txHash: string;
+  logIndex: number;
+  toContract: string;
 }
 
 /**
  * Gets all events from genesis block (contract) -> current block
  */
-async function getAllEvents(contractABIs, contractAddresses, jsonRpcEndpoint, startBlock) {
+async function getAllEvents(contractABIs: any[], contractAddresses: string[], jsonRpcEndpoint: string, startBlock: number): IEthEvent[]{
   const provider: providers.JsonRpcProvider = new providers.JsonRpcProvider(jsonRpcEndpoint);
   const contracts: Contract[] = contractABIs.map((abi, i) => new Contract(contractAddresses[i], abi, provider));
 
@@ -25,18 +31,18 @@ async function getAllEvents(contractABIs, contractAddresses, jsonRpcEndpoint, st
 
   const blocksRange: number[] = range(startBlock, currentBlockNumber + 1);
 
-  const events: EthEvent[] = await Promise.all(
+  const events: IEthEvent[] = await Promise.all(
     blocksRange.map(async blockNumber => {
       try {
-        const block = await provider.getBlock(blockNumber, true);
-        const logsInBlock = await getLogsInBlock(block, provider, contracts, contractAddresses);
+        const block: Promise<Block> = await provider.getBlock(blockNumber, true);
+        const logsInBlock: IEthEvent[]= await getLogsInBlock(block, provider, contracts, contractAddresses);
+        // [[Log, Log]] -> [Log, Log]
+        // [[]] -> []
+        return flatten(logsInBlock);
       } catch (error) {
         // TODO: retry
         throw error
       }
-      // [[Log, Log]] -> [Log, Log]
-      // [[]] -> []
-      return flatten(logsInBlock);
     })
   );
   // [[], [], [Log, Log]] -> [Log, Log]
@@ -48,11 +54,12 @@ async function getAllEvents(contractABIs, contractAddresses, jsonRpcEndpoint, st
  * @param {*} block
  * @returns {Array}
  */
-async function getLogsInBlock(block, provider, contracts, contractAddresses) {
+async function getLogsInBlock(block, provider, contracts, contractAddresses): IEthEvent[] {
   return Promise.all(
     block.transactions.map(async tx => {
       // filter for to/from contract addresses
       if (contractAddresses.includes(tx.from) || contractAddresses.includes(tx.to)) {
+        // TODO: try/catch
         return provider.getTransactionReceipt(tx.hash).then(receipt => {
           if (receipt.logs.length > 0) {
             const events = contracts.map(c => decodeLogs(c, block, tx, receipt.logs));
