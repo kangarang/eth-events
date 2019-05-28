@@ -2,7 +2,7 @@
 
 import { ethers, providers, utils } from 'ethers';
 import { Block, Log, TransactionReceipt } from 'ethers/providers';
-import { LogDescription, Transaction } from 'ethers/utils';
+import { LogDescription } from 'ethers/utils';
 const range = require('lodash/range');
 const flatten = require('lodash/flatten');
 

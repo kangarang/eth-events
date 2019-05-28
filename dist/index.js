@@ -45,11 +45,11 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
     var fromBlock = startBlock;
     var contracts = contractObjects.map(function (c) {
         var contract = new ethers_1.ethers.Contract(c.address, c.abi, provider);
-        // set the contract name and address
+        // set contract name and address
         if ('name' in c) {
             contract.contractName = c.name;
         }
-        contractAddresses = contractAddresses.concat(c.address);
+        contractAddresses = contractAddresses.concat(ethers_1.utils.getAddress(c.address));
         return contract;
     });
     /**
@@ -93,10 +93,11 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                                     receipt.to &&
                                                     receipt.logs &&
                                                     receipt.logs.length > 0 &&
-                                                    (contractAddresses.includes(receipt.from) || contractAddresses.includes(receipt.to));
+                                                    (contractAddresses.includes(ethers_1.utils.getAddress(receipt.from)) ||
+                                                        contractAddresses.includes(ethers_1.utils.getAddress(receipt.to)));
                                             });
                                             try {
-                                                logsInBlock = decodeLogsByTxReceipts(block, filtered);
+                                                logsInBlock = decodeLogsByTxReceipts(block.timestamp, filtered);
                                                 // [[Log, Log]] -> [Log, Log]
                                                 // [[]] -> []
                                                 return [2 /*return*/, flatten(logsInBlock)];
@@ -131,16 +132,18 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
     /**
      * Gets decoded logs from transaction receipts in a single block
      */
-    function decodeLogsByTxReceipts(block, txReceipts) {
+    function decodeLogsByTxReceipts(timestamp, txReceipts) {
+        // prettier-ignore
         return txReceipts.map(function (receipt) {
             try {
                 var events = contracts.map(function (c) {
-                    return decodeLogs(c, block.timestamp, receipt);
+                    return decodeLogs(c, timestamp, receipt);
                 });
                 return flatten(events);
             }
             catch (error) {
-                var sliced = receipt.transactionHash && receipt.transactionHash.slice(0, 8);
+                // prettier-ignore
+                var sliced = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : 'undefined tx hash';
                 console.error("ERROR while decoding tx receipt " + sliced + ": " + error.message);
                 throw error;
             }
@@ -166,9 +169,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                     timestamp: timestamp,
                     txHash: txHash,
                     logIndex: log.logIndex,
-                    toContract: to &&
-                        ethers_1.utils.getAddress(to) === ethers_1.utils.getAddress(contract.address) &&
-                        'contractName' in contract
+                    toContract: to && ethers_1.utils.getAddress(to) === contract.address && 'contractName' in contract
                         ? contract.contractName
                         : 'n/a',
                 };

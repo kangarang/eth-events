@@ -11,56 +11,40 @@
 ## Usage
 
 ```js
-import EthEvents from 'eth-events'
-import Token from './abis/EIP20.json'
+import { EthEvents } from 'eth-events';
+import Token from './abis/EIP20.json';
 
 // abi/address/network
 const contract = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
-  network: 'mainnet',
-  blockNumber: 5000000, // optional, default start block of the contract to query
-}
-// eth-events will batch getLogs every 5000 blocks by default
-// optionally you can specify a different threshold here
-const blockRangeThreshold = 20000
+  name: 'Basic Token',
+};
 
 // init eth-events
-const ethEvents = EthEvents(contract, blockRangeThreshold)
-
-// block range
-const fromBlock = 6000000
-const toBlock = 'latest'
-
-// event name(s)
-const eventNames = ['Transfer', 'Approval']
-
-// indexed event emission arg values (un-hashed filter topics)
-const indexedFilterValues = {
-  _to: '0xCAFEDEADBEEF12345678912456789',
-}
+const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
 // async
-ethEvents.getLogs(fromBlock, toBlock, eventNames, indexedFilterValues).then(logs => {
-  logs.map(log => {
-    console.log(log)
+ethEvents.getAllEvents().then(events => {
+  events.map(e => {
+    console.log(e);
     // {
-    //   logData: {
+    //   name: 'Transfer',
+    //   values: {
     //     _from: '0xDEADBEEFCAFE12345678912456789',
     //     _to: '0xCAFEDEADBEEF12345678912456789',
     //     _value: BigNumber { _bn: <BN: 16bcc41e90> },
     //   },
-    //   txData: {
-    //     txHash: '0xBEEFDEADCAFE12345678912456789',
-    //     logIndex: 53,
-    //     blockNumber: 6000000,
-    //     blockTimestamp: 12341234,
-    //   },
-    //   contractAddress: '0xDEADBEEFCAFE12345678912456789',
-    //   eventName: 'Transfer'
+    //   sender: '0xDEADBEEFCAFE12345678912456789',
+    //   recipient: '0xDEADBEEFCAFE12345678912456789',
+    //   blockNumber: 6000000,
+    //   timestamp: 12341234,
+    //   txHash: '0x333333333a3b3560a72fa72013fe6bc48f8a33924e748335cb203adfd441a635',
+    //   logIndex: 42,
+    //   toContract: 'Basic Token',
     // }
-  })
-})
+  });
+});
 ```
 
 ## Development
