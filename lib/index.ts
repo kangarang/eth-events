@@ -3,6 +3,8 @@
 import { ethers, providers, utils } from 'ethers';
 import { Block, Log, TransactionReceipt } from 'ethers/providers';
 import { LogDescription } from 'ethers/utils';
+import { Promise } from 'bluebird';
+
 const range = require('lodash/range');
 const flatten = require('lodash/flatten');
 
@@ -30,11 +32,11 @@ export function EthEvents(
 ) {
   const provider: providers.JsonRpcProvider = new providers.JsonRpcProvider(jsonRpcEndpoint);
   let contractAddresses: string[] = [];
-  let fromBlock: number = startBlock;
+  let initialBlock: number = startBlock;
   const contracts: ethers.Contract[] = contractObjects.map((c: IContractDetails) => {
     let contract: any = new ethers.Contract(c.address, c.abi, provider);
     // set contract name and address
-    if ('name' in c) {
+    if (c.hasOwnProperty('name')) {
       contract.contractName = c.name;
     }
     contractAddresses = contractAddresses.concat(utils.getAddress(c.address));
@@ -44,33 +46,55 @@ export function EthEvents(
   /**
    * Gets all events from genesis block (contract) -> current block
    */
-  async function getAllEvents(startBlock?: number, endBlock?: number): Promise<IEthEvent[]> {
+  async function getEvents(
+    startBlock: number = initialBlock,
+    endBlock?: number
+  ): Promise<IEthEvent[]> {
     const currentBlockNumber: number = await provider.getBlockNumber();
-    if (startBlock) {
-      fromBlock = startBlock;
+
+    // prettier-ignore
+    if (endBlock && endBlock > currentBlockNumber) { // specified, out of range
+      endBlock = currentBlockNumber + 1;
+    } else if (endBlock && endBlock > startBlock) { // specified, in range
+      endBlock = endBlock;
+    } else if (provider.network.chainId === 420) { // devel, (get all blocks)
+      endBlock = currentBlockNumber + 1;
+    } else {
+      endBlock = startBlock + 4;
     }
-    // TODO: >1 block on mainnet
-    let toBlock: number =
-      endBlock || (provider.network.chainId === 420 ? currentBlockNumber : fromBlock + 1);
-    const blocksRange: number[] = range(fromBlock, toBlock);
+
+    // NOTE: Ranges of >5 blocks on a public network will take a long ass time
+    const blocksRange: number[] = range(startBlock, endBlock);
 
     console.log();
     console.log('current block:', currentBlockNumber);
-    console.log('blocksRange:', blocksRange);
+    console.log(`block range: ${blocksRange[0]} .. ${blocksRange[blocksRange.length - 1]}`);
     console.log();
 
-    const events: IEthEvent[] = await Promise.all(
-      blocksRange.map(async blockNumber => {
+    // 1 block at a time, 5 txs at a time
+    // 1 second interval between rpc queries
+    const events: IEthEvent[] = await Promise.map(
+      blocksRange,
+      async (blockNumber: number) => {
         try {
           // get block
           const block: Block = await provider.getBlock(blockNumber, false);
+          const numTxInBlock = block.transactions.length;
+          console.log(`${numTxInBlock} txs in block ${blockNumber}`);
 
           try {
-            // get block tx receipts
-            const txReceipts: TransactionReceipt[] = await Promise.all(
-              block.transactions.map((tx: string) => provider.getTransactionReceipt(tx))
+            // get tx receipts
+            const txReceipts = await Promise.map(
+              block.transactions,
+              async (txHash: string, i: number) => {
+                await Promise.delay(1000); // 1 second interval
+
+                console.log(`tx ${i}/${numTxInBlock}..`);
+                return provider.getTransactionReceipt(txHash);
+              },
+              { concurrency: 5 } // 5 tx queries per interval
             );
-            // FILTER: only txs w/ Logs & to/from Contract addresses
+            // FILTER: only txs w/ Logs && to/from Contract addresses
             const filtered: TransactionReceipt[] = txReceipts.filter(
               (receipt: TransactionReceipt) =>
                 receipt.from &&
@@ -100,7 +124,8 @@ export function EthEvents(
           console.error(`ERROR while getting block ${blockNumber}: ${error.message}`);
           throw error;
         }
-      })
+      },
+      { concurrency: 1 } // 1 block at a time
     );
     // [[], [], [Log, Log]] -> [Log, Log]
     return flatten(events);
@@ -122,7 +147,7 @@ export function EthEvents(
         return flatten(events);
       } catch (error) {
         // prettier-ignore
-        const sliced: string = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : 'undefined tx hash';
+        const sliced: string = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : '[undefined tx hash]';
         console.error(`ERROR while decoding tx receipt ${sliced}: ${error.message}`);
         throw error;
       }
@@ -139,9 +164,9 @@ export function EthEvents(
   ): IEthEvent[] {
     // prettier-ignore
     return (receipt as any).logs
-      .map((log: Log): IEthEvent => {
+      .map((log: Log): IEthEvent | null => {
         const decoded: LogDescription = contract.interface.parseLog(log);
-
+        // return custom, decoded log -OR- null
         if (decoded) {
           const { name, values } = decoded;
           const { transactionHash: txHash, blockNumber, to, from } = receipt;
@@ -161,14 +186,12 @@ export function EthEvents(
                 : 'n/a',
           };
         }
-
-        // null || custom, decoded log
-        return decoded;
+        return null;
       })
       .filter(l => l !== null);
   }
 
   return Object.freeze({
-    getAllEvents,
+    getEvents,
   });
 }

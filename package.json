@@ -11,6 +11,7 @@
   "author": "kangarang",
   "license": "MIT",
   "dependencies": {
+    "bluebird": "^3.5.5",
     "ethers": "^4.0.28",
     "lodash": "4.17.11"
   },

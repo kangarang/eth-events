@@ -15,17 +15,19 @@ import { EthEvents } from 'eth-events';
 import Token from './abis/EIP20.json';
 
 // abi/address/network
-const contract = {
+const token = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
   name: 'Basic Token',
 };
 
+const contracts = [token];
+
 // init eth-events
 const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
 // async
-ethEvents.getAllEvents().then(events => {
+ethEvents.getEvents().then(events => {
   events.map(e => {
     console.log(e);
     // {

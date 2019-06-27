@@ -36,17 +36,18 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var ethers_1 = require("ethers");
+var bluebird_1 = require("bluebird");
 var range = require('lodash/range');
 var flatten = require('lodash/flatten');
 function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
     if (startBlock === void 0) { startBlock = 1; }
     var provider = new ethers_1.providers.JsonRpcProvider(jsonRpcEndpoint);
     var contractAddresses = [];
-    var fromBlock = startBlock;
+    var initialBlock = startBlock;
     var contracts = contractObjects.map(function (c) {
         var contract = new ethers_1.ethers.Contract(c.address, c.abi, provider);
         // set contract name and address
-        if ('name' in c) {
+        if (c.hasOwnProperty('name')) {
             contract.contractName = c.name;
         }
         contractAddresses = contractAddresses.concat(ethers_1.utils.getAddress(c.address));
@@ -55,26 +56,37 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
     /**
      * Gets all events from genesis block (contract) -> current block
      */
-    function getAllEvents(startBlock, endBlock) {
-        return __awaiter(this, void 0, void 0, function () {
-            var currentBlockNumber, toBlock, blocksRange, events;
+    function getEvents(startBlock, endBlock) {
+        if (startBlock === void 0) { startBlock = initialBlock; }
+        return __awaiter(this, void 0, bluebird_1.Promise, function () {
+            var currentBlockNumber, blocksRange, events;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0: return [4 /*yield*/, provider.getBlockNumber()];
                     case 1:
                         currentBlockNumber = _a.sent();
-                        if (startBlock) {
-                            fromBlock = startBlock;
+                        // prettier-ignore
+                        if (endBlock && endBlock > currentBlockNumber) { // specified, out of range
+                            endBlock = currentBlockNumber + 1;
                         }
-                        toBlock = endBlock || (provider.network.chainId === 420 ? currentBlockNumber : fromBlock + 1);
-                        blocksRange = range(fromBlock, toBlock);
+                        else if (endBlock && endBlock > startBlock) { // specified, in range
+                            endBlock = endBlock;
+                        }
+                        else if (provider.network.chainId === 420) { // devel, (get all blocks)
+                            endBlock = currentBlockNumber + 1;
+                        }
+                        else {
+                            endBlock = startBlock + 4;
+                        }
+                        blocksRange = range(startBlock, endBlock);
                         console.log();
                         console.log('current block:', currentBlockNumber);
-                        console.log('blocksRange:', blocksRange);
+                        console.log("block range: " + blocksRange[0] + " .. " + blocksRange[blocksRange.length - 1]);
                         console.log();
-                        return [4 /*yield*/, Promise.all(blocksRange.map(function (blockNumber) { return __awaiter(_this, void 0, void 0, function () {
-                                var block, txReceipts, filtered, logsInBlock, error_1, error_2;
+                        return [4 /*yield*/, bluebird_1.Promise.map(blocksRange, function (blockNumber) { return __awaiter(_this, void 0, void 0, function () {
+                                var block, numTxInBlock_1, txReceipts, filtered, logsInBlock, error_1, error_2;
+                                var _this = this;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
                                         case 0:
@@ -82,10 +94,23 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                             return [4 /*yield*/, provider.getBlock(blockNumber, false)];
                                         case 1:
                                             block = _a.sent();
+                                            numTxInBlock_1 = block.transactions.length;
+                                            console.log(numTxInBlock_1 + " txs in block " + blockNumber);
                                             _a.label = 2;
                                         case 2:
                                             _a.trys.push([2, 4, , 5]);
-                                            return [4 /*yield*/, Promise.all(block.transactions.map(function (tx) { return provider.getTransactionReceipt(tx); }))];
+                                            return [4 /*yield*/, bluebird_1.Promise.map(block.transactions, function (txHash, i) { return __awaiter(_this, void 0, void 0, function () {
+                                                    return __generator(this, function (_a) {
+                                                        switch (_a.label) {
+                                                            case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
+                                                            case 1:
+                                                                _a.sent(); // 1 second interval
+                                                                console.log("tx " + i + "/" + numTxInBlock_1 + "..");
+                                                                return [2 /*return*/, provider.getTransactionReceipt(txHash)];
+                                                        }
+                                                    });
+                                                }); }, { concurrency: 5 } // 5 tx queries per interval
+                                                )];
                                         case 3:
                                             txReceipts = _a.sent();
                                             filtered = txReceipts.filter(function (receipt) {
@@ -120,7 +145,8 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                         case 7: return [2 /*return*/];
                                     }
                                 });
-                            }); }))];
+                            }); }, { concurrency: 1 } // 1 block at a time
+                            )];
                     case 2:
                         events = _a.sent();
                         // [[], [], [Log, Log]] -> [Log, Log]
@@ -143,7 +169,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
             }
             catch (error) {
                 // prettier-ignore
-                var sliced = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : 'undefined tx hash';
+                var sliced = receipt.transactionHash ? receipt.transactionHash.slice(0, 8) : '[undefined tx hash]';
                 console.error("ERROR while decoding tx receipt " + sliced + ": " + error.message);
                 throw error;
             }
@@ -157,6 +183,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
         return receipt.logs
             .map(function (log) {
             var decoded = contract.interface.parseLog(log);
+            // return custom, decoded log -OR- null
             if (decoded) {
                 var name = decoded.name, values = decoded.values;
                 var txHash = receipt.transactionHash, blockNumber = receipt.blockNumber, to = receipt.to, from = receipt.from;
@@ -174,13 +201,12 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                         : 'n/a',
                 };
             }
-            // null || custom, decoded log
-            return decoded;
+            return null;
         })
             .filter(function (l) { return l !== null; });
     }
     return Object.freeze({
-        getAllEvents: getAllEvents,
+        getEvents: getEvents,
     });
 }
 exports.EthEvents = EthEvents;
