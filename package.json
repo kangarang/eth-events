@@ -1,6 +1,6 @@
 {
   "name": "eth-events",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "description": "A library for querying and decoding Ethereum event logs",
   "main": "dist/index.js",
   "scripts": {
