@@ -28,7 +28,8 @@ interface IContractDetails {
 export function EthEvents(
   contractObjects: IContractDetails[],
   jsonRpcEndpoint: string,
-  startBlock: number = 1
+  startBlock: number = 1,
+  extraneousEventNames: string[] = []
 ) {
   const provider: providers.JsonRpcProvider = new providers.JsonRpcProvider(jsonRpcEndpoint);
   let contractAddresses: string[] = [];
@@ -93,12 +94,17 @@ export function EthEvents(
             const txReceipts = await Promise.map(
               block.transactions,
               async (txHash: string, i: number) => {
-                await Promise.delay(1250); // 1.25 second interval
+                await Promise.delay(1000); // 1 second interval
 
                 console.log(`tx ${i}/${numTxInBlock}`);
-                return getTransactionReceipt(provider, txHash);
+                try {
+                  return getTransactionReceipt(provider, txHash);
+                } catch (error) {
+                  // prettier-ignore
+                  console.error('ERROR: tried to get tx receipt 5 times and did not get a response')
+                }
               },
-              { concurrency: 5 } // 5 tx queries per interval
+              { concurrency: 4 } // 4 max tx queries per interval
             );
             // FILTER: only txs w/ Logs && to/from Contract addresses
             const filtered: TransactionReceipt[] = txReceipts.filter(
@@ -199,6 +205,9 @@ export function EthEvents(
         const decoded: LogDescription = contract.interface.parseLog(log);
         // return custom, decoded log -OR- null
         if (!!decoded) {
+          if (extraneousEventNames.includes(decoded.name)) {
+            return null;
+          }
           const { name, values } = decoded;
           const { transactionHash: txHash, blockNumber, to, from } = receipt;
 

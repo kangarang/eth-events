@@ -39,8 +39,9 @@ var ethers_1 = require("ethers");
 var bluebird_1 = require("bluebird");
 var range = require('lodash/range');
 var flatten = require('lodash/flatten');
-function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
+function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEventNames) {
     if (startBlock === void 0) { startBlock = 1; }
+    if (extraneousEventNames === void 0) { extraneousEventNames = []; }
     var provider = new ethers_1.providers.JsonRpcProvider(jsonRpcEndpoint);
     var contractAddresses = [];
     var initialBlock = startBlock;
@@ -109,14 +110,21 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                             return [4 /*yield*/, bluebird_1.Promise.map(block.transactions, function (txHash, i) { return __awaiter(_this, void 0, void 0, function () {
                                                     return __generator(this, function (_a) {
                                                         switch (_a.label) {
-                                                            case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1250)];
+                                                            case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
                                                             case 1:
                                                                 _a.sent(); // 1.25 second interval
                                                                 console.log("tx " + i + "/" + numTxInBlock_1);
-                                                                return [2 /*return*/, getTransactionReceipt(provider, txHash)];
+                                                                try {
+                                                                    return [2 /*return*/, getTransactionReceipt(provider, txHash)];
+                                                                }
+                                                                catch (error) {
+                                                                    console.log('wtf?');
+                                                                    return [2 /*return*/, getTransactionReceipt(provider, txHash)];
+                                                                }
+                                                                return [2 /*return*/];
                                                         }
                                                     });
-                                                }); }, { concurrency: 5 } // 5 tx queries per interval
+                                                }); }, { concurrency: 4 } // 4 max tx queries per interval
                                                 )];
                                         case 3:
                                             txReceipts = _a.sent();
@@ -145,7 +153,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                         case 4:
                                             error_1 = _a.sent();
                                             console.error("ERROR while getting tx receipts: " + error_1.message);
-                                            throw error_1;
+                                            return [3 /*break*/, 5];
                                         case 5: return [3 /*break*/, 7];
                                         case 6:
                                             error_2 = _a.sent();
@@ -219,6 +227,9 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
             var decoded = contract.interface.parseLog(log);
             // return custom, decoded log -OR- null
             if (!!decoded) {
+                if (extraneousEventNames.includes(decoded.name)) {
+                    return null;
+                }
                 var name = decoded.name, values = decoded.values;
                 var txHash = receipt.transactionHash, blockNumber = receipt.blockNumber, to = receipt.to, from = receipt.from;
                 return {

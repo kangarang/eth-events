@@ -50,8 +50,8 @@ test('Should initialize mainnet contracts correctly', async t => {
 
     const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
-    const events = await ethEvents.getEvents(startBlock, startBlock + 1);
-    console.log('events:', events);
+    const events = await ethEvents.getEvents(startBlock, startBlock + 5);
+    t.is(events.length, 1, 'sould have returned 1 event');
 
     t.end();
   } catch (error) {
