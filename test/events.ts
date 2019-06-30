@@ -5,7 +5,7 @@ const Gatekeeper = require('./abis/Gatekeeper.json');
 const Registry = require('./abis/Registry.json');
 const TokenCapacitor = require('./abis/TokenCapacitor.json');
 
-test('Should initialize and retrieve events over localhost correctly', async t => {
+test.skip('Should initialize and retrieve events over localhost correctly', async t => {
   try {
     const gatekeeper = {
       abi: Gatekeeper.abi,
@@ -50,7 +50,7 @@ test('Should initialize mainnet contracts correctly', async t => {
 
     const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
-    const events = await ethEvents.getEvents();
+    const events = await ethEvents.getEvents(startBlock, startBlock + 1);
     console.log('events:', events);
 
     t.end();

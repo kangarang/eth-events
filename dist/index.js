@@ -67,17 +67,24 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                     case 1:
                         currentBlockNumber = _a.sent();
                         // prettier-ignore
-                        if (endBlock && endBlock > currentBlockNumber) { // specified, out of range
+                        if (!!endBlock && endBlock > currentBlockNumber) { // specified, out of range
+                            console.log('specified endBlock out of range. using currentBlock', currentBlockNumber);
+                            endBlock = currentBlockNumber + 1;
+                        }
+                        else if (startBlock > currentBlockNumber) { // startBlock out of range
+                            console.log("specified startBlock (" + startBlock + ") greater than currentBlock " + currentBlockNumber);
+                            startBlock = initialBlock;
                             endBlock = currentBlockNumber + 1;
                         }
                         else if (endBlock && endBlock > startBlock) { // specified, in range
                             endBlock = endBlock;
                         }
                         else if (provider.network.chainId === 420) { // devel, (get all blocks)
+                            startBlock = 1;
                             endBlock = currentBlockNumber + 1;
                         }
                         else {
-                            endBlock = startBlock + 4;
+                            endBlock = startBlock + 5;
                         }
                         blocksRange = range(startBlock, endBlock);
                         console.log();
@@ -102,11 +109,11 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                             return [4 /*yield*/, bluebird_1.Promise.map(block.transactions, function (txHash, i) { return __awaiter(_this, void 0, void 0, function () {
                                                     return __generator(this, function (_a) {
                                                         switch (_a.label) {
-                                                            case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
+                                                            case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1250)];
                                                             case 1:
-                                                                _a.sent(); // 1 second interval
-                                                                console.log("tx " + i + "/" + numTxInBlock_1 + "..");
-                                                                return [2 /*return*/, provider.getTransactionReceipt(txHash)];
+                                                                _a.sent(); // 1.25 second interval
+                                                                console.log("tx " + i + "/" + numTxInBlock_1);
+                                                                return [2 /*return*/, getTransactionReceipt(provider, txHash)];
                                                         }
                                                     });
                                                 }); }, { concurrency: 5 } // 5 tx queries per interval
@@ -114,13 +121,16 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                         case 3:
                                             txReceipts = _a.sent();
                                             filtered = txReceipts.filter(function (receipt) {
-                                                return receipt.from &&
-                                                    receipt.to &&
-                                                    receipt.logs &&
+                                                return !!receipt.from &&
+                                                    !!receipt.to &&
+                                                    !!receipt.logs &&
                                                     receipt.logs.length > 0 &&
                                                     (contractAddresses.includes(ethers_1.utils.getAddress(receipt.from)) ||
                                                         contractAddresses.includes(ethers_1.utils.getAddress(receipt.to)));
                                             });
+                                            if (filtered.length > 0) {
+                                                console.log("found " + filtered.length + " txs in block " + blockNumber);
+                                            }
                                             try {
                                                 logsInBlock = decodeLogsByTxReceipts(block.timestamp, filtered);
                                                 // [[Log, Log]] -> [Log, Log]
@@ -128,7 +138,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                                                 return [2 /*return*/, flatten(logsInBlock)];
                                             }
                                             catch (error) {
-                                                console.error("ERROR while decoding tx receiptS: " + error.message);
+                                                console.error("ERROR while decoding tx receipts: " + error.message);
                                                 throw error;
                                             }
                                             return [3 /*break*/, 5];
@@ -155,6 +165,27 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
             });
         });
     }
+    function getTransactionReceipt(provider, txHash, counter) {
+        if (counter === void 0) { counter = 1; }
+        return __awaiter(this, void 0, void 0, function () {
+            return __generator(this, function (_a) {
+                try {
+                    return [2 /*return*/, provider.getTransactionReceipt(txHash)];
+                }
+                catch (error) {
+                    console.error('error:', error);
+                    console.log('trying again for tx:', txHash);
+                    if (counter === 4) {
+                        throw error;
+                    }
+                    else {
+                        return [2 /*return*/, getTransactionReceipt(provider, txHash, counter + 1)];
+                    }
+                }
+                return [2 /*return*/];
+            });
+        });
+    }
     /**
      * Gets decoded logs from transaction receipts in a single block
      */
@@ -165,6 +196,9 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
                 var events = contracts.map(function (c) {
                     return decodeLogs(c, timestamp, receipt);
                 });
+                if (events.length > 0) {
+                    console.log("found " + events.length + " logs in block " + receipt.blockNumber);
+                }
                 return flatten(events);
             }
             catch (error) {
@@ -184,7 +218,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock) {
             .map(function (log) {
             var decoded = contract.interface.parseLog(log);
             // return custom, decoded log -OR- null
-            if (decoded) {
+            if (!!decoded) {
                 var name = decoded.name, values = decoded.values;
                 var txHash = receipt.transactionHash, blockNumber = receipt.blockNumber, to = receipt.to, from = receipt.from;
                 return {

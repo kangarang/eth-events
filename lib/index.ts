@@ -53,14 +53,20 @@ export function EthEvents(
     const currentBlockNumber: number = await provider.getBlockNumber();
 
     // prettier-ignore
-    if (endBlock && endBlock > currentBlockNumber) { // specified, out of range
+    if (!!endBlock && endBlock > currentBlockNumber) { // specified, out of range
+      console.log('specified endBlock out of range. using currentBlock', currentBlockNumber);
+      endBlock = currentBlockNumber + 1;
+    } else if (startBlock > currentBlockNumber) { // startBlock out of range
+      console.log(`specified startBlock (${startBlock}) greater than currentBlock ${currentBlockNumber}`);
+      startBlock = initialBlock;
       endBlock = currentBlockNumber + 1;
     } else if (endBlock && endBlock > startBlock) { // specified, in range
       endBlock = endBlock;
     } else if (provider.network.chainId === 420) { // devel, (get all blocks)
+      startBlock = 1;
       endBlock = currentBlockNumber + 1;
     } else {
-      endBlock = startBlock + 4;
+      endBlock = startBlock + 5;
     }
 
     // NOTE: Ranges of >5 blocks on a public network will take a long ass time
@@ -87,23 +93,27 @@ export function EthEvents(
             const txReceipts = await Promise.map(
               block.transactions,
               async (txHash: string, i: number) => {
-                await Promise.delay(1000); // 1 second interval
+                await Promise.delay(1250); // 1.25 second interval
 
-                console.log(`tx ${i}/${numTxInBlock}..`);
-                return provider.getTransactionReceipt(txHash);
+                console.log(`tx ${i}/${numTxInBlock}`);
+                return getTransactionReceipt(provider, txHash);
               },
               { concurrency: 5 } // 5 tx queries per interval
             );
             // FILTER: only txs w/ Logs && to/from Contract addresses
             const filtered: TransactionReceipt[] = txReceipts.filter(
               (receipt: TransactionReceipt) =>
-                receipt.from &&
-                receipt.to &&
-                receipt.logs &&
+                !!receipt.from &&
+                !!receipt.to &&
+                !!receipt.logs &&
                 receipt.logs.length > 0 &&
                 (contractAddresses.includes(utils.getAddress(receipt.from)) ||
                   contractAddresses.includes(utils.getAddress(receipt.to)))
             );
+
+            if (filtered.length > 0) {
+              console.log(`found ${filtered.length} txs in block ${blockNumber}`);
+            }
 
             try {
               // get decoded logs
@@ -112,7 +122,7 @@ export function EthEvents(
               // [[]] -> []
               return flatten(logsInBlock);
             } catch (error) {
-              console.error(`ERROR while decoding tx receiptS: ${error.message}`);
+              console.error(`ERROR while decoding tx receipts: ${error.message}`);
               throw error;
             }
           } catch (error) {
@@ -131,6 +141,24 @@ export function EthEvents(
     return flatten(events);
   }
 
+  async function getTransactionReceipt(
+    provider: providers.JsonRpcProvider,
+    txHash: string,
+    counter: number = 1
+  ) {
+    try {
+      return provider.getTransactionReceipt(txHash);
+    } catch (error) {
+      console.error('error:', error);
+      console.log('trying again for tx:', txHash);
+      if (counter === 4) {
+        throw error;
+      } else {
+        return getTransactionReceipt(provider, txHash, counter + 1);
+      }
+    }
+  }
+
   /**
    * Gets decoded logs from transaction receipts in a single block
    */
@@ -144,6 +172,9 @@ export function EthEvents(
         const events: IEthEvent[][] = contracts.map((c: ethers.Contract) =>
           decodeLogs(c, timestamp, receipt)
         );
+        if (events.length > 0) {
+          console.log(`found ${events.length} logs in block ${receipt.blockNumber}`);
+        }
         return flatten(events);
       } catch (error) {
         // prettier-ignore
@@ -167,7 +198,7 @@ export function EthEvents(
       .map((log: Log): IEthEvent | null => {
         const decoded: LogDescription = contract.interface.parseLog(log);
         // return custom, decoded log -OR- null
-        if (decoded) {
+        if (!!decoded) {
           const { name, values } = decoded;
           const { transactionHash: txHash, blockNumber, to, from } = receipt;
 
