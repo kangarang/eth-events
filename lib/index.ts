@@ -62,12 +62,9 @@ export function EthEvents(
       startBlock = initialBlock;
       endBlock = currentBlockNumber + 1;
     } else if (endBlock && endBlock > startBlock) { // specified, in range
-      endBlock = endBlock;
-    } else if (provider.network.chainId === 420) { // devel, (get all blocks)
-      startBlock = 1;
-      endBlock = currentBlockNumber + 1;
+      endBlock = endBlock + 1;
     } else {
-      endBlock = startBlock + 5;
+      endBlock = currentBlockNumber + 1;
     }
 
     // NOTE: Ranges of >5 blocks on a public network will take a long ass time
