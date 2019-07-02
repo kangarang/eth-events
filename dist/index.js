@@ -112,14 +112,14 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                                                         switch (_a.label) {
                                                             case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
                                                             case 1:
-                                                                _a.sent(); // 1.25 second interval
+                                                                _a.sent(); // 1 second interval
                                                                 console.log("tx " + i + "/" + numTxInBlock_1);
                                                                 try {
                                                                     return [2 /*return*/, getTransactionReceipt(provider, txHash)];
                                                                 }
                                                                 catch (error) {
-                                                                    console.log('wtf?');
-                                                                    return [2 /*return*/, getTransactionReceipt(provider, txHash)];
+                                                                    // prettier-ignore
+                                                                    console.error('ERROR: tried to get tx receipt 5 times and did not get a response');
                                                                 }
                                                                 return [2 /*return*/];
                                                         }
@@ -153,7 +153,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                                         case 4:
                                             error_1 = _a.sent();
                                             console.error("ERROR while getting tx receipts: " + error_1.message);
-                                            return [3 /*break*/, 5];
+                                            throw error_1;
                                         case 5: return [3 /*break*/, 7];
                                         case 6:
                                             error_2 = _a.sent();
