@@ -238,13 +238,13 @@ export function EthEvents(
             return null;
           }
           const { name, values } = decoded;
-          const { blockNumber, transactionHash, logIndex } = log;
+          const { blockNumber, transactionHash: txHash, logIndex } = log;
 
           return {
             name,
             values,
             blockNumber,
-            transactionHash,
+            txHash,
             logIndex,
           };
         }
@@ -257,13 +257,13 @@ export function EthEvents(
     try {
       const rawLogs = await provider.getLogs(filter);
       const deeLogs = decodeRawLogs(rawLogs);
-      const withTimestamps = await Promise.map(
+      return Promise.map(
         deeLogs,
         async (event, i) => {
           await Promise.delay(1000);
           console.log(`${i}/${deeLogs.length}`);
           const block = await provider.getBlock(event.blockNumber);
-          const txReceipt = await provider.getTransactionReceipt(event.transactionHash);
+          const txReceipt = await provider.getTransactionReceipt(event.txHash);
           event.timestamp = block.timestamp;
           event.recipient = txReceipt.to;
           event.sender = txReceipt.from;
@@ -271,7 +271,6 @@ export function EthEvents(
         },
         { concurrency: 5 }
       );
-      return withTimestamps;
     } catch (error) {
       if (counter >= 5) {
         throw new Error(`ERROR: ${error.message}`);

@@ -256,12 +256,12 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                     return null;
                 }
                 var name = decoded.name, values = decoded.values;
-                var blockNumber = log.blockNumber, transactionHash = log.transactionHash, logIndex = log.logIndex;
+                var blockNumber = log.blockNumber, txHash = log.transactionHash, logIndex = log.logIndex;
                 return {
                     name: name,
                     values: values,
                     blockNumber: blockNumber,
-                    transactionHash: transactionHash,
+                    txHash: txHash,
                     logIndex: logIndex,
                 };
             }
@@ -272,17 +272,17 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
     function getEventsByFilter(filter, counter) {
         if (counter === void 0) { counter = 0; }
         return __awaiter(this, void 0, void 0, function () {
-            var rawLogs, deeLogs_1, withTimestamps, error_3;
+            var rawLogs, deeLogs_1, error_3;
             var _this = this;
             return __generator(this, function (_a) {
                 switch (_a.label) {
                     case 0:
-                        _a.trys.push([0, 3, , 7]);
+                        _a.trys.push([0, 2, , 6]);
                         return [4 /*yield*/, provider.getLogs(filter)];
                     case 1:
                         rawLogs = _a.sent();
                         deeLogs_1 = decodeRawLogs(rawLogs);
-                        return [4 /*yield*/, bluebird_1.Promise.map(deeLogs_1, function (event, i) { return __awaiter(_this, void 0, void 0, function () {
+                        return [2 /*return*/, bluebird_1.Promise.map(deeLogs_1, function (event, i) { return __awaiter(_this, void 0, void 0, function () {
                                 var block, txReceipt;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
@@ -293,7 +293,7 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                                             return [4 /*yield*/, provider.getBlock(event.blockNumber)];
                                         case 2:
                                             block = _a.sent();
-                                            return [4 /*yield*/, provider.getTransactionReceipt(event.transactionHash)];
+                                            return [4 /*yield*/, provider.getTransactionReceipt(event.txHash)];
                                         case 3:
                                             txReceipt = _a.sent();
                                             event.timestamp = block.timestamp;
@@ -304,21 +304,18 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                                 });
                             }); }, { concurrency: 5 })];
                     case 2:
-                        withTimestamps = _a.sent();
-                        return [2 /*return*/, withTimestamps];
-                    case 3:
                         error_3 = _a.sent();
-                        if (!(counter >= 5)) return [3 /*break*/, 4];
+                        if (!(counter >= 5)) return [3 /*break*/, 3];
                         throw new Error("ERROR: " + error_3.message);
-                    case 4:
+                    case 3:
                         counter += 1;
                         console.error('retrying..', error_3);
                         return [4 /*yield*/, bluebird_1.Promise.delay(3000)];
-                    case 5:
+                    case 4:
                         _a.sent();
                         return [2 /*return*/, getEventsByFilter(filter, counter)];
-                    case 6: return [3 /*break*/, 7];
-                    case 7: return [2 /*return*/];
+                    case 5: return [3 /*break*/, 6];
+                    case 6: return [2 /*return*/];
                 }
             });
         });

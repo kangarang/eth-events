@@ -8,44 +8,87 @@
 
     npm install eth-events
 
+## API
+
+```ts
+interface IContractDetails {
+  abi: any[];
+  address: string;
+  name?: string;
+}
+
+interface IFilter {
+  fromBlock: number;
+  toBlock: number | 'latest';
+  address: string | string[];
+  topics?: string[];
+}
+
+interface IEthEvent {
+  name: string;
+  values: {
+    [key: string]: string | number;
+  };
+  sender: string;
+  recipient: string;
+  txHash: string;
+  logIndex: number;
+  blockNumber: number;
+  timestamp: number;
+  toContract?: string;
+}
+
+// init eth-events
+function EthEvents(
+  contracts: IContractDetails[],
+  jsonRpcEndpoint: string,
+  startBlock?: number,
+  extraneousEventNames?: string[]
+);
+
+// get events by block range
+async function getEvents(startBlock?: startBlock, endBlock?: number): Promise<IEthEvent[]>;
+
+// get events by filter (via eth_getLogs)
+async function getEventsByFilter(filter: IFilter): Promise<IEthEvent[]>;
+```
+
 ## Usage
 
-```js
+```ts
 import { EthEvents } from 'eth-events';
 import Token from './abis/EIP20.json';
 
-// abi/address/network
-const token = {
+// contract details
+const token: IContractDetails = {
   abi: Token.abi,
   address: '0xDEADBEEFCAFE12345678912456789',
-  name: 'Basic Token',
+  name: 'Basic Token', // optional
 };
-
-const contracts = [token];
+const contracts: IContractDetails[] = [token];
+// provider endpoint
+const jsonRpcEndpoint: string = 'http://localhost:8545';
+// either the initial block to begin the query || block number of when the contract was deployed
+const startBlock: number = 1;
 
 // init eth-events
 const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
-// async
-ethEvents.getEvents().then(events => {
-  events.map(e => {
-    console.log(e);
-    // {
-    //   name: 'Transfer',
-    //   values: {
-    //     _from: '0xDEADBEEFCAFE12345678912456789',
-    //     _to: '0xCAFEDEADBEEF12345678912456789',
-    //     _value: BigNumber { _bn: <BN: 16bcc41e90> },
-    //   },
-    //   sender: '0xDEADBEEFCAFE12345678912456789',
-    //   recipient: '0xDEADBEEFCAFE12345678912456789',
-    //   blockNumber: 6000000,
-    //   timestamp: 12341234,
-    //   txHash: '0x333333333a3b3560a72fa72013fe6bc48f8a33924e748335cb203adfd441a635',
-    //   logIndex: 42,
-    //   toContract: 'Basic Token',
-    // }
-  });
+// get events by block range
+ethEvents.getEvents().then((events: IEthEvent[]) => {
+  // ...
+});
+
+const filter: IFilter = {
+  fromBlock: 4555363,
+  toBlock: 'latest',
+  address: '0xDEADBEEFCAFE12345678912456789',
+  topics: [],
+};
+
+// get events by filter (via eth_getLogs)
+ethEvents.getEventsByFilter(filter).then((events: IEthEvent[]) => {
+  // ...
 });
 ```
 

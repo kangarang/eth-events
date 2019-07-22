@@ -3,7 +3,7 @@ import { utils } from 'ethers';
 const nonNumRegex = /^([^0-9]*)$/;
 
 export function printEvent(event) {
-  const { name, blockNumber, transactionHash, values, timestamp } = event;
+  const { name, blockNumber, txHash, values, timestamp } = event;
   const datetime = new Date(timestamp * 1000).toLocaleString();
 
   console.log();
@@ -11,7 +11,7 @@ export function printEvent(event) {
   console.log(datetime);
   console.log('-'.repeat(datetime.length));
   console.log('block:', blockNumber);
-  console.log('txHash:', transactionHash);
+  console.log('txHash:', txHash);
   console.log('from:', event.sender);
   console.log('to:', event.recipient);
 
