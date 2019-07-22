@@ -228,7 +228,64 @@ export function EthEvents(
       .filter(l => l !== null);
   }
 
+  function decodeRawLogs(logs) {
+    return logs
+      .map((log: Log) => {
+        const decoded: LogDescription = contracts[0].interface.parseLog(log);
+        // return custom, decoded log -OR- null
+        if (!!decoded) {
+          if (extraneousEventNames.includes(decoded.name)) {
+            return null;
+          }
+          const { name, values } = decoded;
+          const { blockNumber, transactionHash, logIndex } = log;
+
+          return {
+            name,
+            values,
+            blockNumber,
+            transactionHash,
+            logIndex,
+          };
+        }
+        return null;
+      })
+      .filter(l => l !== null);
+  }
+
+  async function getEventsByFilter(filter, counter = 0) {
+    try {
+      const rawLogs = await provider.getLogs(filter);
+      const deeLogs = decodeRawLogs(rawLogs);
+      const withTimestamps = await Promise.map(
+        deeLogs,
+        async (event, i) => {
+          await Promise.delay(1000);
+          console.log(`${i}/${deeLogs.length}`);
+          const block = await provider.getBlock(event.blockNumber);
+          const txReceipt = await provider.getTransactionReceipt(event.transactionHash);
+          event.timestamp = block.timestamp;
+          event.recipient = txReceipt.to;
+          event.sender = txReceipt.from;
+          return event;
+        },
+        { concurrency: 5 }
+      );
+      return withTimestamps;
+    } catch (error) {
+      if (counter >= 5) {
+        throw new Error(`ERROR: ${error.message}`);
+      } else {
+        counter += 1;
+        console.error('retrying..', error);
+        await Promise.delay(3000);
+        return getEventsByFilter(filter, counter);
+      }
+    }
+  }
+
   return Object.freeze({
     getEvents,
+    getEventsByFilter,
   });
 }
