@@ -6,7 +6,7 @@ import { printEvent } from '../utils/print';
 const Gatekeeper = require('./abis/Gatekeeper.json');
 const Registry = require('./abis/Registry.json');
 
-test('should get events by filter on rinkeby', async t => {
+test('should get events by filter from rinkeby', async t => {
   try {
     const gkAddress = process.env.RINKEBY_GATEKEEPER_ADDRESS;
     const gatekeeper = {
@@ -41,13 +41,14 @@ test('should get events by filter on rinkeby', async t => {
     } catch (error) {
       console.error(error);
     }
+
     t.end();
   } catch (error) {
     console.error(`Error: ${error.message}`);
   }
 });
 
-test.skip('should get events by filter on mainnet', async t => {
+test.skip('should get events by filter from mainnet', async t => {
   try {
     const registry = {
       abi: Registry.abi,

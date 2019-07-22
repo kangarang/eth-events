@@ -5,7 +5,7 @@ const Gatekeeper = require('./abis/Gatekeeper.json');
 const Registry = require('./abis/Registry.json');
 const TokenCapacitor = require('./abis/TokenCapacitor.json');
 
-test.skip('Should initialize and retrieve events over localhost correctly', async t => {
+test.skip('Should initialize and get events from localhost', async t => {
   try {
     const gatekeeper = {
       abi: Gatekeeper.abi,
@@ -36,7 +36,7 @@ test.skip('Should initialize and retrieve events over localhost correctly', asyn
   }
 });
 
-test('Should initialize mainnet contracts correctly', async t => {
+test.skip('Should initialize and get events from mainnet', async t => {
   try {
     const registry = {
       abi: Registry.abi,
