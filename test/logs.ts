@@ -1,4 +1,5 @@
 import * as test from 'tape';
+import { utils } from 'ethers';
 import { EthEvents } from '../dist';
 import { printEvent } from '../utils/print';
 
@@ -27,7 +28,7 @@ test('should get events by filter on rinkeby', async t => {
     };
 
     try {
-      const events = await ethEvents.getLogs(filter);
+      const events = await ethEvents.getEventsByFilter(filter);
 
       let tokens = utils.bigNumberify('0');
       events.forEach(e => {

@@ -246,8 +246,86 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
         })
             .filter(function (l) { return l !== null; });
     }
+    function decodeRawLogs(logs) {
+        return logs
+            .map(function (log) {
+            var decoded = contracts[0].interface.parseLog(log);
+            // return custom, decoded log -OR- null
+            if (!!decoded) {
+                if (extraneousEventNames.includes(decoded.name)) {
+                    return null;
+                }
+                var name = decoded.name, values = decoded.values;
+                var blockNumber = log.blockNumber, transactionHash = log.transactionHash, logIndex = log.logIndex;
+                return {
+                    name: name,
+                    values: values,
+                    blockNumber: blockNumber,
+                    transactionHash: transactionHash,
+                    logIndex: logIndex,
+                };
+            }
+            return null;
+        })
+            .filter(function (l) { return l !== null; });
+    }
+    function getEventsByFilter(filter, counter) {
+        if (counter === void 0) { counter = 0; }
+        return __awaiter(this, void 0, void 0, function () {
+            var rawLogs, deeLogs_1, withTimestamps, error_3;
+            var _this = this;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 3, , 7]);
+                        return [4 /*yield*/, provider.getLogs(filter)];
+                    case 1:
+                        rawLogs = _a.sent();
+                        deeLogs_1 = decodeRawLogs(rawLogs);
+                        return [4 /*yield*/, bluebird_1.Promise.map(deeLogs_1, function (event, i) { return __awaiter(_this, void 0, void 0, function () {
+                                var block, txReceipt;
+                                return __generator(this, function (_a) {
+                                    switch (_a.label) {
+                                        case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
+                                        case 1:
+                                            _a.sent();
+                                            console.log(i + "/" + deeLogs_1.length);
+                                            return [4 /*yield*/, provider.getBlock(event.blockNumber)];
+                                        case 2:
+                                            block = _a.sent();
+                                            return [4 /*yield*/, provider.getTransactionReceipt(event.transactionHash)];
+                                        case 3:
+                                            txReceipt = _a.sent();
+                                            event.timestamp = block.timestamp;
+                                            event.recipient = txReceipt.to;
+                                            event.sender = txReceipt.from;
+                                            return [2 /*return*/, event];
+                                    }
+                                });
+                            }); }, { concurrency: 5 })];
+                    case 2:
+                        withTimestamps = _a.sent();
+                        return [2 /*return*/, withTimestamps];
+                    case 3:
+                        error_3 = _a.sent();
+                        if (!(counter >= 5)) return [3 /*break*/, 4];
+                        throw new Error("ERROR: " + error_3.message);
+                    case 4:
+                        counter += 1;
+                        console.error('retrying..', error_3);
+                        return [4 /*yield*/, bluebird_1.Promise.delay(3000)];
+                    case 5:
+                        _a.sent();
+                        return [2 /*return*/, getEventsByFilter(filter, counter)];
+                    case 6: return [3 /*break*/, 7];
+                    case 7: return [2 /*return*/];
+                }
+            });
+        });
+    }
     return Object.freeze({
         getEvents: getEvents,
+        getEventsByFilter: getEventsByFilter,
     });
 }
 exports.EthEvents = EthEvents;
