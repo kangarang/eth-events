@@ -1,7 +1,7 @@
 'use strict';
 
 import { ethers, providers, utils } from 'ethers';
-import { Block, Log, TransactionReceipt } from 'ethers/providers';
+import { Block, Log, TransactionReceipt, Filter } from 'ethers/providers';
 import { LogDescription } from 'ethers/utils';
 import { Promise } from 'bluebird';
 
@@ -23,6 +23,14 @@ interface IContractDetails {
   abi: any[];
   address: string;
   name?: string;
+}
+
+interface DecodedLog {
+  name: string;
+  values: any;
+  blockNumber?: number;
+  txHash?: string;
+  logIndex?: number;
 }
 
 export function EthEvents(
@@ -228,32 +236,38 @@ export function EthEvents(
       .filter(l => l !== null);
   }
 
-  function decodeRawLogs(logs) {
+  function decodeRawLogs(logs: Log[]): (DecodedLog | null)[] {
     return logs
       .map((log: Log) => {
-        const decoded: LogDescription = contracts[0].interface.parseLog(log);
-        // return custom, decoded log -OR- null
-        if (!!decoded) {
-          if (extraneousEventNames.includes(decoded.name)) {
-            return null;
-          }
-          const { name, values } = decoded;
-          const { blockNumber, transactionHash: txHash, logIndex } = log;
+        const contract = contracts.find(c => c.address === log.address);
+        if (!!contract) {
+          // decode log using matching contract
+          const decoded: LogDescription = contract.interface.parseLog(log);
 
-          return {
-            name,
-            values,
-            blockNumber,
-            txHash,
-            logIndex,
-          };
+          // return custom, decoded log -OR- null
+          if (!!decoded) {
+            if (extraneousEventNames.includes(decoded.name)) {
+              return null;
+            }
+            const { name, values } = decoded;
+            const { blockNumber, transactionHash: txHash, logIndex } = log;
+
+            return {
+              name,
+              values,
+              blockNumber,
+              txHash,
+              logIndex,
+            };
+          }
+          return null;
         }
         return null;
       })
-      .filter(l => l !== null);
+      .filter(l => l != null);
   }
 
-  async function getEventsByFilter(filter, counter = 0) {
+  async function getEventsByFilter(filter: Filter, counter = 0) {
     try {
       const rawLogs = await provider.getLogs(filter);
       const deeLogs = decodeRawLogs(rawLogs);

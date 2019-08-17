@@ -249,25 +249,30 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
     function decodeRawLogs(logs) {
         return logs
             .map(function (log) {
-            var decoded = contracts[0].interface.parseLog(log);
-            // return custom, decoded log -OR- null
-            if (!!decoded) {
-                if (extraneousEventNames.includes(decoded.name)) {
-                    return null;
+            var contract = contracts.find(function (c) { return c.address === log.address; });
+            if (!!contract) {
+                // decode log using matching contract
+                var decoded = contract.interface.parseLog(log);
+                // return custom, decoded log -OR- null
+                if (!!decoded) {
+                    if (extraneousEventNames.includes(decoded.name)) {
+                        return null;
+                    }
+                    var name = decoded.name, values = decoded.values;
+                    var blockNumber = log.blockNumber, txHash = log.transactionHash, logIndex = log.logIndex;
+                    return {
+                        name: name,
+                        values: values,
+                        blockNumber: blockNumber,
+                        txHash: txHash,
+                        logIndex: logIndex,
+                    };
                 }
-                var name = decoded.name, values = decoded.values;
-                var blockNumber = log.blockNumber, txHash = log.transactionHash, logIndex = log.logIndex;
-                return {
-                    name: name,
-                    values: values,
-                    blockNumber: blockNumber,
-                    txHash: txHash,
-                    logIndex: logIndex,
-                };
+                return null;
             }
             return null;
         })
-            .filter(function (l) { return l !== null; });
+            .filter(function (l) { return l != null; });
     }
     function getEventsByFilter(filter, counter) {
         if (counter === void 0) { counter = 0; }
