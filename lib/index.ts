@@ -274,16 +274,20 @@ export function EthEvents(
       return Promise.map(
         deeLogs,
         async (event, i) => {
-          await Promise.delay(1000);
-          console.log(`${i}/${deeLogs.length}`);
-          const block = await provider.getBlock(event.blockNumber);
-          const txReceipt = await provider.getTransactionReceipt(event.txHash);
-          event.timestamp = block.timestamp;
-          event.recipient = txReceipt.to;
-          event.sender = txReceipt.from;
-          return event;
+          try {
+            await Promise.delay(1250);
+            console.log(`${i}/${deeLogs.length}`);
+            const block = await provider.getBlock(event.blockNumber);
+            const txReceipt = await provider.getTransactionReceipt(event.txHash);
+            event.timestamp = block.timestamp;
+            event.recipient = txReceipt.to;
+            event.sender = txReceipt.from;
+            return event;
+          } catch (error) {
+            throw error;
+          }
         },
-        { concurrency: 5 }
+        { concurrency: 4 }
       );
     } catch (error) {
       if (counter >= 5) {

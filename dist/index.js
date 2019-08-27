@@ -288,10 +288,12 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                         rawLogs = _a.sent();
                         deeLogs_1 = decodeRawLogs(rawLogs);
                         return [2 /*return*/, bluebird_1.Promise.map(deeLogs_1, function (event, i) { return __awaiter(_this, void 0, void 0, function () {
-                                var block, txReceipt;
+                                var block, txReceipt, error_4;
                                 return __generator(this, function (_a) {
                                     switch (_a.label) {
-                                        case 0: return [4 /*yield*/, bluebird_1.Promise.delay(1000)];
+                                        case 0:
+                                            _a.trys.push([0, 4, , 5]);
+                                            return [4 /*yield*/, bluebird_1.Promise.delay(1250)];
                                         case 1:
                                             _a.sent();
                                             console.log(i + "/" + deeLogs_1.length);
@@ -305,9 +307,13 @@ function EthEvents(contractObjects, jsonRpcEndpoint, startBlock, extraneousEvent
                                             event.recipient = txReceipt.to;
                                             event.sender = txReceipt.from;
                                             return [2 /*return*/, event];
+                                        case 4:
+                                            error_4 = _a.sent();
+                                            throw error_4;
+                                        case 5: return [2 /*return*/];
                                     }
                                 });
-                            }); }, { concurrency: 5 })];
+                            }); }, { concurrency: 4 })];
                     case 2:
                         error_3 = _a.sent();
                         if (!(counter >= 5)) return [3 /*break*/, 3];
