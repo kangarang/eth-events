@@ -57,3 +57,39 @@ export function sanitizeEvents(events) {
   });
 }
 
+export function stringifySolidityValues(val: any) {
+  if (typeof val === 'object' && val.hasOwnProperty('_hex')) {
+    return val.toString();
+  } else if (typeof val === 'number') {
+    return utils.bigNumberify(val).toString();
+  } else if (typeof val === 'boolean') {
+    if (val) {
+      return 'true';
+    } else {
+      return 'false';
+    }
+  }
+  // TODO: throw
+  return val;
+}
+
+export function formatTokens(methodName: string, val: string) {
+  if (
+    methodName.includes('balance') ||
+    methodName.includes('tokens') ||
+    methodName.includes('totalsupply')
+  ) {
+    return commifyBaseUnits(val);
+  }
+  return val;
+}
+
+export function formatUts(methodName: string, val: string) {
+  if (
+    (methodName.includes('date') || methodName.includes('time')) &&
+    !methodName.includes('tokens')
+  ) {
+    return new Date(parseInt(val) * 1000).toLocaleString();
+  }
+  return val;
+}
