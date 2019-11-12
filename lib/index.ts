@@ -8,7 +8,7 @@ import { Promise } from 'bluebird';
 const range = require('lodash/range');
 const flatten = require('lodash/flatten');
 
-interface IEthEvent {
+export interface IEthEvent {
   name?: string;
   values?: any;
   sender?: string;
@@ -19,13 +19,13 @@ interface IEthEvent {
   blockNumber?: number;
   toContract?: string;
 }
-interface IContractDetails {
+export interface IContractDetails {
   abi: any[];
   address: string;
   name?: string;
 }
 
-interface DecodedLog {
+export interface DecodedLog {
   name: string;
   values: any;
   blockNumber?: number;
@@ -233,7 +233,7 @@ export function EthEvents(
         }
         return null;
       })
-      .filter(l => l !== null);
+      .filter((l: any) => l !== null);
   }
 
   function decodeRawLogs(logs: Log[]): (DecodedLog | null)[] {
@@ -267,13 +267,13 @@ export function EthEvents(
       .filter(l => l != null);
   }
 
-  async function getEventsByFilter(filter: Filter, counter = 0) {
+  async function getEventsByFilter(filter: Filter, counter: number = 0) {
     try {
       const rawLogs = await provider.getLogs(filter);
       const deeLogs = decodeRawLogs(rawLogs);
       return Promise.map(
         deeLogs,
-        async (event, i) => {
+        async (event: any, i: number) => {
           try {
             await Promise.delay(1250);
             console.log(`${i}/${deeLogs.length}`);

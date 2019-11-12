@@ -9,39 +9,45 @@ const Registry = require('./abis/Registry.json');
 test('should get events by filter from rinkeby', async t => {
   try {
     const gkAddress = process.env.RINKEBY_GATEKEEPER_ADDRESS;
-    const gatekeeper = {
-      abi: Gatekeeper.abi,
-      address: gkAddress,
-      name: 'Gatekeeper',
-    };
-    const contracts = [gatekeeper];
-    const rpcEndpoint = 'https://rinkeby.infura.io';
-    const startBlock = 4555363;
-    const ignore = ['PermissionRequested', 'SlateCreated', 'SlateStaked', 'VotingTokensDeposited'];
-    const ethEvents = EthEvents(contracts, rpcEndpoint, startBlock, ignore);
+    if (gkAddress) {
+      const gatekeeper = {
+        abi: Gatekeeper.abi,
+        address: gkAddress,
+        name: 'Gatekeeper',
+      };
+      const contracts = [gatekeeper];
+      const rpcEndpoint = 'https://rinkeby.infura.io';
+      const startBlock = 4555363;
+      const ignore = [
+        'PermissionRequested',
+        'SlateCreated',
+        'SlateStaked',
+        'VotingTokensDeposited',
+      ];
+      const ethEvents = EthEvents(contracts, rpcEndpoint, startBlock, ignore);
 
-    const filter = {
-      fromBlock: 4555363,
-      toBlock: 'latest',
-      address: gkAddress,
-      topics: [],
-    };
+      const filter = {
+        fromBlock: 4555363,
+        toBlock: 'latest',
+        address: gkAddress,
+        topics: [],
+      };
 
-    try {
-      const events = await ethEvents.getEventsByFilter(filter);
+      try {
+        const events = await ethEvents.getEventsByFilter(filter);
 
-      let tokens = utils.bigNumberify('0');
-      events.forEach(e => {
-        printEvent(e);
-        if (e.name === 'BallotCommitted') {
-          tokens = tokens.add(e.values.numTokens.toString());
-        }
-      });
-      console.log('total tokens committed:', utils.formatUnits(tokens, 18).toString());
-    } catch (error) {
-      console.error(error);
+        let tokens = utils.bigNumberify('0');
+        events.forEach(e => {
+          printEvent(e);
+          if (e.name === 'BallotCommitted') {
+            tokens = tokens.add(e.values.numTokens.toString());
+          }
+        });
+        console.log('total tokens committed:', utils.formatUnits(tokens, 18).toString());
+      } catch (error) {
+        console.error(error);
+      }
     }
-
     t.end();
   } catch (error) {
     console.error(`Error: ${error.message}`);

@@ -7,29 +7,32 @@ const TokenCapacitor = require('./abis/TokenCapacitor.json');
 
 test.skip('Should initialize and get events from localhost', async t => {
   try {
-    const gatekeeper = {
-      abi: Gatekeeper.abi,
-      address: process.env.GATEKEEPER_ADDRESS,
-      name: 'Gatekeeper',
-    };
-    const tokenCapacitor = {
-      abi: TokenCapacitor.abi,
-      address: process.env.TOKEN_CAPACITOR_ADDRESS,
-      name: 'Token Capacitor',
-    };
+    const gkAddress = process.env.GATEKEEPER_ADDRESS;
+    const tcAddress = process.env.TOKEN_CAPACITOR_ADDRESS;
+    if (gkAddress && tcAddress) {
+      const gatekeeper = {
+        abi: Gatekeeper.abi,
+        address: gkAddress,
+        name: 'Gatekeeper',
+      };
+      const tokenCapacitor = {
+        abi: TokenCapacitor.abi,
+        address: tcAddress,
+        name: 'Token Capacitor',
+      };
 
-    const contracts = [gatekeeper, tokenCapacitor];
-    const jsonRpcEndpoint = 'http://localhost:8545';
-    const startBlock = 1;
+      const contracts = [gatekeeper, tokenCapacitor];
+      const jsonRpcEndpoint = 'http://localhost:8545';
+      const startBlock = 1;
 
-    const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
+      const ethEvents = EthEvents(contracts, jsonRpcEndpoint, startBlock);
 
-    const events = await ethEvents.getEvents();
-    console.log('events:', events);
-    console.log();
-    console.log(`${events.length} events`);
-    console.log();
-
+      const events = await ethEvents.getEvents();
+      console.log('events:', events);
+      console.log();
+      console.log(`${events.length} events`);
+      console.log();
+    }
     t.end();
   } catch (error) {
     console.error(`Error: ${error.message}`);

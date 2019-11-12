@@ -1,21 +1,25 @@
 {
   "compilerOptions": {
-    "outDir": "dist",
-    "module": "commonjs",
-    "target": "es5",
-    "lib": ["es2017"],
-    "sourceMap": true,
-    "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
+    "declaration": true,
     "forceConsistentCasingInFileNames": true,
-    "noFallthroughCasesInSwitch": true,
+    "lib": ["es2017"],
+    "module": "commonjs",
+    "moduleResolution": "node",
     "noEmitOnError": true,
     "noErrorTruncation": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitAny": false,
     "noImplicitReturns": true,
     "noUnusedParameters": true,
+    "outDir": "dist",
     "pretty": true,
+    "sourceMap": true,
     "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true
+    "suppressImplicitAnyIndexErrors": true,
+    "strict": true,
+    "target": "es5"
   },
-  "include": ["lib"]
+  "include": ["lib"],
+  "exclude": ["node_modules", "client", "dist"]
 }
