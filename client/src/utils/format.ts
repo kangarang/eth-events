@@ -31,3 +31,29 @@ export function formatMethodTypes(methodAbi: any) {
   const signature = `${methodAbi.name}(${inputs})${outputs}`;
   return { ...methodAbi, signature };
 }
+
+const nonNumRegex = /^([^0-9]*)$/;
+
+export function sanitizeEvents(events) {
+  return events.map(event => {
+    const newValues = Object.keys(event.values).reduce((acc, eventArg) => {
+      let value = event.values[eventArg];
+      if (nonNumRegex.test(eventArg) && eventArg !== 'length') {
+        if (value.hasOwnProperty('_hex')) {
+          value = value.toString();
+        }
+        return {
+          ...acc,
+          [eventArg]: value,
+        };
+      }
+      return acc;
+    }, {});
+
+    return {
+      ...event,
+      values: newValues,
+    };
+  });
+}
+

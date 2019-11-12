@@ -1,5 +1,6 @@
 export const SAVED_ABIS = 'SAVED_ABIS';
 export const SAVED_HIDDEN_METHODS = 'SAVED_HIDDEN_METHODS';
+export const SAVED_EVENTS = 'SAVED_EVENTS';
 
 export const loadState: any = (storageKey: string) => {
   try {
