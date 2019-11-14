@@ -1,0 +1,21 @@
+{
+  "files": {
+    "main.css": "/eth-events/static/css/main.306fe3b5.chunk.css",
+    "main.js": "/eth-events/static/js/main.f48f12e1.chunk.js",
+    "main.js.map": "/eth-events/static/js/main.f48f12e1.chunk.js.map",
+    "runtime-main.js": "/eth-events/static/js/runtime-main.1e5f901b.js",
+    "runtime-main.js.map": "/eth-events/static/js/runtime-main.1e5f901b.js.map",
+    "static/js/2.6c89f4d7.chunk.js": "/eth-events/static/js/2.6c89f4d7.chunk.js",
+    "static/js/2.6c89f4d7.chunk.js.map": "/eth-events/static/js/2.6c89f4d7.chunk.js.map",
+    "index.html": "/eth-events/index.html",
+    "precache-manifest.518287de8a4059cb1339da8e6224e751.js": "/eth-events/precache-manifest.518287de8a4059cb1339da8e6224e751.js",
+    "service-worker.js": "/eth-events/service-worker.js",
+    "static/css/main.306fe3b5.chunk.css.map": "/eth-events/static/css/main.306fe3b5.chunk.css.map"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.1e5f901b.js",
+    "static/js/2.6c89f4d7.chunk.js",
+    "static/css/main.306fe3b5.chunk.css",
+    "static/js/main.f48f12e1.chunk.js"
+  ]
+}
